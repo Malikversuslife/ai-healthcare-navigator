@@ -1,12 +1,6 @@
 import { UserHealthContext } from '../../shared/types'
 import { AIService, AIExtractionResult } from './types'
 
-const EMERGENCY_KEYWORDS = [
-  'chest pain', 'difficulty breathing', 'can\'t breathe', 'not breathing',
-  'severe bleeding', 'unconscious', 'stroke', 'seizure', 'anaphylaxis',
-  'heart attack', 'overdose', 'suicide', 'choking', 'severe allergic reaction',
-]
-
 const SEVERITY_KEYWORDS = {
   severe: ['severe', 'extreme', 'terrible', 'worst', 'unbearable', 'intense', 'sharp'],
   moderate: ['moderate', 'noticeable', 'significant', 'bothersome', 'uncomfortable'],
@@ -43,11 +37,6 @@ const FOLLOW_UP_QUESTIONS = [
   'Are there any other symptoms you\'re experiencing?',
   'Has this happened before?',
 ]
-
-function isEmergency(message: string): boolean {
-  const lower = message.toLowerCase()
-  return EMERGENCY_KEYWORDS.some(keyword => lower.includes(keyword))
-}
 
 function extractSeverity(message: string): number {
   const lower = message.toLowerCase()
@@ -131,15 +120,6 @@ export class MockAIService implements AIService {
   ): Promise<AIExtractionResult> {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 500))
-
-    // Emergency check
-    if (isEmergency(message)) {
-      return {
-        response: 'Based on what you\'re describing, this sounds like it could be a medical emergency. Please call 112 or go to the nearest emergency room immediately. If you\'re in Lagos, you can also call 01-112.',
-        extractedContext: { ...context, concern: 'emergency', severity: 10 },
-        isReadyForRecommendation: false,
-      }
-    }
 
     // Extract information from message
     const extractedConcern = extractConcern(message)

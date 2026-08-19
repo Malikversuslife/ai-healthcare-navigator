@@ -51,7 +51,6 @@ export function buildRecommendation(
   const recommendations: Record<CareLevel, Omit<CareRecommendation, 'careLevel'>> = {
     'emergency-care': {
       reasoning: 'Based on the severity of your symptoms, you should seek immediate emergency care.',
-      confidence: 0.9,
       disclaimer: 'This is not a medical diagnosis. If you are experiencing a medical emergency, please call 112 or go to the nearest emergency room immediately.',
       nextSteps: [
         { type: 'emergency', label: 'Call Emergency Services', description: 'Dial 112 immediately' },
@@ -60,7 +59,6 @@ export function buildRecommendation(
     },
     'urgent-care': {
       reasoning: 'Your symptoms suggest you should be seen by a healthcare provider today or as soon as possible.',
-      confidence: 0.75,
       disclaimer: 'This guidance is based on the information you provided. A healthcare professional can provide a proper evaluation.',
       nextSteps: [
         { type: 'find-provider', label: 'Find Urgent Care', description: 'Locate an urgent care center or walk-in clinic' },
@@ -69,7 +67,6 @@ export function buildRecommendation(
     },
     'same-day-care': {
       reasoning: 'Based on your symptoms, you should consider visiting a clinic or hospital within the next 24 hours.',
-      confidence: 0.7,
       disclaimer: 'This recommendation is based on the information you shared. Please consult a healthcare professional for proper evaluation.',
       nextSteps: [
         { type: 'find-provider', label: 'Find a Clinic', description: 'Locate a clinic near you' },
@@ -78,7 +75,6 @@ export function buildRecommendation(
     },
     'routine-care': {
       reasoning: 'Your symptoms appear to be manageable. You should schedule an appointment with a healthcare provider within the next few days.',
-      confidence: 0.65,
       disclaimer: 'This is general guidance based on the information you provided. A healthcare professional can provide personalized advice.',
       nextSteps: [
         { type: 'find-provider', label: 'Find a Doctor', description: 'Schedule an appointment with a primary care provider' },

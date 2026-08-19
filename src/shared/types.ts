@@ -46,7 +46,6 @@ export interface CoverageResult {
 export interface CareRecommendation {
   careLevel: CareLevel
   reasoning: string
-  confidence: number
   disclaimer: string
   nextSteps: NextStep[]
 }
