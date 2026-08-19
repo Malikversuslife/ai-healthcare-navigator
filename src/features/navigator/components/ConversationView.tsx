@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Message } from '../../../shared/types'
 import { useConversation } from '../hooks/useConversation'
 import MessageBubble from './MessageBubble'
@@ -6,11 +7,13 @@ import CareRecommendationCard from './CareRecommendation'
 import ProviderList from './ProviderList'
 import LocationPrompt from './LocationPrompt'
 import Spinner from '../../../shared/components/Spinner'
-import Input from '../../../shared/components/Input'
-import Button from '../../../shared/components/Button'
 import insuranceData from '../data/mock-insurance.json'
+import ConversationProgress from './ConversationProgress'
 
 function ConversationView() {
+  const location = useLocation()
+  const initialMessage = (location.state as { initialMessage?: string })?.initialMessage
+
   const {
     state,
     sendMessage,
@@ -22,14 +25,33 @@ function ConversationView() {
 
   const [inputValue, setInputValue] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const hasStarted = useRef(false)
 
   useEffect(() => {
-    startConversation()
+    if (!hasStarted.current) {
+      hasStarted.current = true
+      startConversation()
+    }
   }, [startConversation])
+
+  useEffect(() => {
+    if (initialMessage && hasStarted.current && state.messages.length === 1) {
+      setTimeout(() => {
+        sendMessage(initialMessage)
+      }, 500)
+    }
+  }, [initialMessage, state.messages.length, sendMessage])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [state.messages])
+
+  useEffect(() => {
+    if (!state.isLoading && state.currentStep !== 'recommendation' && state.currentStep !== 'provider-search') {
+      inputRef.current?.focus()
+    }
+  }, [state.isLoading, state.currentStep])
 
   const handleSend = async () => {
     if (!inputValue.trim() || state.isLoading) return
@@ -45,102 +67,121 @@ function ConversationView() {
     }
   }
 
+  const handleQuickReply = async (reply: string) => {
+    await sendMessage(reply)
+  }
+
   const handleLocationSelect = (location: string) => {
     setLocation(location)
   }
 
+  const showInput = state.currentStep !== 'recommendation' && 
+                    state.currentStep !== 'provider-search' &&
+                    state.currentStep !== 'location-prompt'
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        {/* Header */}
-        <div className="bg-primary-600 text-white px-6 py-4">
-          <h2 className="text-lg font-semibold">Healthcare Navigator</h2>
-          <p className="text-primary-100 text-sm">Describe your health concern and we'll guide you to the right care</p>
-        </div>
+    <div className="min-h-[calc(100vh-64px)] bg-cream-50">
+      <div className="max-w-3xl mx-auto px-4 py-6">
+        {/* Progress Indicator */}
+        <ConversationProgress progress={state.progress} currentStep={state.currentStep} />
 
-        {/* Messages */}
-        <div className="h-[500px] overflow-y-auto p-6">
-          {state.messages.map((message: Message) => (
-            <MessageBubble key={message.id} message={message} />
-          ))}
-
-          {state.isLoading && (
-            <div className="flex justify-start mb-4">
-              <div className="bg-gray-100 rounded-2xl px-4 py-3">
-                <Spinner size="sm" />
-              </div>
-            </div>
-          )}
-
-          {/* Location Prompt */}
-          {state.currentStep === 'provider-search' && state.providers.length === 0 && !state.userContext.location && (
-            <LocationPrompt onLocationSelect={handleLocationSelect} />
-          )}
-
-          {/* Care Recommendation */}
-          {state.recommendation && (
-            <CareRecommendationCard
-              recommendation={state.recommendation}
-              onFindProviders={() => findProviders()}
-            />
-          )}
-
-          {/* Provider List */}
-          {state.providers.length > 0 && (
-            <ProviderList
-              providers={state.providers}
-              selectedInsurance={state.selectedInsurance}
-            />
-          )}
-
-          {/* Insurance Selection */}
-          {state.currentStep === 'provider-search' && state.providers.length > 0 && (
-            <div className="mt-6 bg-gray-50 rounded-xl p-4">
-              <h4 className="font-medium text-gray-900 mb-3">Select your insurance (optional)</h4>
-              <div className="flex flex-wrap gap-2">
-                {insuranceData.map(insurance => (
-                  <Button
-                    key={insurance.id}
-                    variant={state.selectedInsurance === insurance.id ? 'primary' : 'secondary'}
-                    size="sm"
-                    onClick={() => selectInsurance(insurance.id)}
-                  >
-                    {insurance.name}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input */}
-        {state.currentStep !== 'recommendation' && state.currentStep !== 'provider-search' && (
-          <div className="border-t border-gray-200 p-4">
-            <div className="flex gap-2">
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Describe your health concern..."
-                disabled={state.isLoading}
+        {/* Main Chat Container */}
+        <div className="bg-white rounded-2xl border border-ink-200 shadow-sm overflow-hidden mt-4">
+          {/* Messages Area */}
+          <div className="h-[500px] md:h-[600px] overflow-y-auto p-4 md:p-6">
+            {state.messages.map((message: Message) => (
+              <MessageBubble 
+                key={message.id} 
+                message={message}
+                onQuickReply={handleQuickReply}
               />
-              <Button
-                onClick={handleSend}
-                disabled={!inputValue.trim() || state.isLoading}
-              >
-                Send
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
+            ))}
 
-      {/* Disclaimer */}
-      <p className="text-center text-sm text-gray-500 mt-4">
-        This is a healthcare navigation tool, not a diagnostic service. Always consult a healthcare professional for medical advice.
-      </p>
+            {state.isLoading && (
+              <div className="flex justify-start mb-4">
+                <div className="bg-ink-100 rounded-2xl px-4 py-3">
+                  <Spinner size="sm" />
+                </div>
+              </div>
+            )}
+
+            {/* Location Prompt */}
+            {state.currentStep === 'provider-search' && state.providers.length === 0 && !state.userContext.location && (
+              <LocationPrompt onLocationSelect={handleLocationSelect} />
+            )}
+
+            {/* Care Recommendation */}
+            {state.recommendation && (
+              <CareRecommendationCard
+                recommendation={state.recommendation}
+                onFindProviders={() => findProviders()}
+              />
+            )}
+
+            {/* Provider List */}
+            {state.providers.length > 0 && (
+              <ProviderList
+                providers={state.providers}
+                selectedInsurance={state.selectedInsurance}
+              />
+            )}
+
+            {/* Insurance Selection */}
+            {state.currentStep === 'provider-search' && state.providers.length > 0 && (
+              <div className="mt-6 bg-ink-50 rounded-xl p-4 border border-ink-100">
+                <h4 className="font-medium text-ink-900 mb-3">Select your insurance (optional)</h4>
+                <div className="flex flex-wrap gap-2">
+                  {insuranceData.map(insurance => (
+                    <button
+                      key={insurance.id}
+                      onClick={() => selectInsurance(insurance.id)}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                        state.selectedInsurance === insurance.id
+                          ? 'bg-teal-600 text-white'
+                          : 'bg-white border border-ink-200 text-ink-700 hover:border-teal-400'
+                      }`}
+                    >
+                      {insurance.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input Area */}
+          {showInput && (
+            <div className="border-t border-ink-100 p-4 bg-ink-50">
+              <div className="flex gap-3">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Describe your health concern..."
+                  disabled={state.isLoading}
+                  className="flex-1 px-4 py-3 bg-white border border-ink-200 rounded-xl text-ink-900 placeholder-ink-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:opacity-50"
+                />
+                <button
+                  onClick={handleSend}
+                  disabled={!inputValue.trim() || state.isLoading}
+                  className="px-6 py-3 bg-teal-600 text-white rounded-xl font-medium hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Disclaimer */}
+        <p className="text-center text-xs text-ink-400 mt-4 px-4">
+          This is a healthcare navigation tool, not a diagnostic service. Always consult a healthcare professional for medical advice.
+        </p>
+      </div>
     </div>
   )
 }

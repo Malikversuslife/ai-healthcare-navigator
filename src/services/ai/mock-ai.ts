@@ -8,9 +8,9 @@ const SEVERITY_KEYWORDS = {
 }
 
 const DURATION_KEYWORDS = {
-  sudden: ['just now', 'suddenly', 'started', 'minutes ago', 'recently'],
-  recent: ['today', 'yesterday', 'few days', 'this week'],
-  ongoing: ['weeks', 'months', 'years', 'chronic', 'long time', 'always'],
+  sudden: ['just now', 'suddenly', 'started', 'minutes ago', 'recently', 'today'],
+  recent: ['yesterday', 'few days', 'this week', '2 days', '3 days', '4 days'],
+  ongoing: ['weeks', 'months', 'years', 'chronic', 'long time', 'always', 'week'],
 }
 
 const CONCERN_PATTERNS = [
@@ -30,33 +30,18 @@ const CONCERN_PATTERNS = [
   { pattern: /child|kid|baby|infant/i, concern: 'pediatric issue' },
 ]
 
-const FOLLOW_UP_QUESTIONS = [
-  'Can you tell me more about what you\'re experiencing?',
-  'How long have you had this symptom?',
-  'On a scale of 1 to 10, how would you rate the severity?',
-  'Are there any other symptoms you\'re experiencing?',
-  'Has this happened before?',
-]
-
-function extractSeverity(message: string): number {
-  const lower = message.toLowerCase()
-  if (SEVERITY_KEYWORDS.severe.some(k => lower.includes(k))) return 8
-  if (SEVERITY_KEYWORDS.moderate.some(k => lower.includes(k))) return 5
-  if (SEVERITY_KEYWORDS.mild.some(k => lower.includes(k))) return 2
-  const numberMatch = lower.match(/(\d+)/)
-  if (numberMatch) {
-    const num = parseInt(numberMatch[1])
-    if (num >= 1 && num <= 10) return num
-  }
-  return 5
+interface ExtractionResult {
+  concern: string | null
+  symptoms: string[]
+  duration: string | null
+  severity: number | null
 }
 
-function extractDuration(message: string): string {
-  const lower = message.toLowerCase()
-  if (DURATION_KEYWORDS.sudden.some(k => lower.includes(k))) return 'sudden'
-  if (DURATION_KEYWORDS.recent.some(k => lower.includes(k))) return 'recent'
-  if (DURATION_KEYWORDS.ongoing.some(k => lower.includes(k))) return 'ongoing'
-  return 'recent'
+function extractConcern(message: string): string | null {
+  for (const { pattern, concern } of CONCERN_PATTERNS) {
+    if (pattern.test(message)) return concern
+  }
+  return null
 }
 
 function extractSymptoms(message: string): string[] {
@@ -75,19 +60,68 @@ function extractSymptoms(message: string): string[] {
   ]
 
   symptomPatterns.forEach(pattern => {
-    if (pattern.test(lower)) {
-      symptoms.push(lower.match(pattern)?.[0] || '')
+    const match = lower.match(pattern)
+    if (match) {
+      symptoms.push(match[0])
     }
   })
 
   return symptoms
 }
 
-function extractConcern(message: string): string | null {
-  for (const { pattern, concern } of CONCERN_PATTERNS) {
-    if (pattern.test(message)) return concern
+function extractDuration(message: string): string | null {
+  const lower = message.toLowerCase()
+
+  // Check for specific duration mentions
+  if (DURATION_KEYWORDS.sudden.some(k => lower.includes(k))) return 'sudden'
+  if (DURATION_KEYWORDS.recent.some(k => lower.includes(k))) return 'recent'
+  if (DURATION_KEYWORDS.ongoing.some(k => lower.includes(k))) return 'ongoing'
+
+  // Check for numeric duration (e.g., "18 hours", "2 days", "3 weeks")
+  const timeMatch = lower.match(/(\d+)\s*(hour|day|week|month|minute)/)
+  if (timeMatch) {
+    const num = parseInt(timeMatch[1])
+    const unit = timeMatch[2]
+    if (unit === 'minute' || (unit === 'hour' && num <= 24)) return 'sudden'
+    if (unit === 'hour' || (unit === 'day' && num <= 7)) return 'recent'
+    return 'ongoing'
   }
+
   return null
+}
+
+function extractSeverity(message: string): number | null {
+  const lower = message.toLowerCase()
+
+  // Check for severity keywords
+  if (SEVERITY_KEYWORDS.severe.some(k => lower.includes(k))) return 8
+  if (SEVERITY_KEYWORDS.moderate.some(k => lower.includes(k))) return 5
+  if (SEVERITY_KEYWORDS.mild.some(k => lower.includes(k))) return 2
+
+  // Check for numeric severity (e.g., "7 out of 10", "severity 8")
+  const numberMatch = lower.match(/(\d+)\s*(out of|\/)\s*10/)
+  if (numberMatch) {
+    const num = parseInt(numberMatch[1])
+    if (num >= 1 && num <= 10) return num
+  }
+
+  // Check for standalone number 1-10
+  const standaloneMatch = lower.match(/\b([1-9]|10)\b/)
+  if (standaloneMatch) {
+    const num = parseInt(standaloneMatch[1])
+    if (num >= 1 && num <= 10) return num
+  }
+
+  return null
+}
+
+function extractInformation(message: string): ExtractionResult {
+  return {
+    concern: extractConcern(message),
+    symptoms: extractSymptoms(message),
+    duration: extractDuration(message),
+    severity: extractSeverity(message),
+  }
 }
 
 function getContextCompleteness(context: UserHealthContext): number {
@@ -95,22 +129,36 @@ function getContextCompleteness(context: UserHealthContext): number {
   if (context.concern) completeness += 30
   if (context.symptoms.length > 0) completeness += 20
   if (context.duration) completeness += 25
-  if (context.severity) completeness += 15
+  if (context.severity !== null && context.severity !== undefined) completeness += 15
   if (context.location) completeness += 10
   return completeness
 }
 
+function getMissingInformation(context: UserHealthContext): string[] {
+  const missing: string[] = []
+  if (!context.concern) missing.push('concern')
+  if (!context.duration) missing.push('duration')
+  if (context.severity === null || context.severity === undefined) missing.push('severity')
+  if (context.symptoms.length === 0) missing.push('symptoms')
+  return missing
+}
+
 function getFollowUpQuestion(context: UserHealthContext): string {
-  if (!context.concern) {
+  const missing = getMissingInformation(context)
+
+  if (missing.includes('concern')) {
     return 'What brings you here today? Can you describe what you\'re experiencing?'
   }
-  if (!context.duration) {
+  if (missing.includes('duration')) {
     return 'How long have you been experiencing this?'
   }
-  if (context.severity === 5) {
-    return 'On a scale of 1 to 10, how would you rate the severity of your symptoms?'
+  if (missing.includes('severity')) {
+    return 'On a scale of 1 to 10, how would you rate the severity?'
   }
-  return FOLLOW_UP_QUESTIONS[Math.floor(Math.random() * FOLLOW_UP_QUESTIONS.length)]
+  if (missing.includes('symptoms')) {
+    return 'Are there any other symptoms you\'re experiencing alongside this?'
+  }
+  return 'Can you tell me more about what you\'re experiencing?'
 }
 
 export class MockAIService implements AIService {
@@ -119,19 +167,30 @@ export class MockAIService implements AIService {
     context: UserHealthContext
   ): Promise<AIExtractionResult> {
     // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 500))
+    await new Promise(resolve => setTimeout(resolve, 400 + Math.random() * 400))
 
     // Extract information from message
-    const extractedConcern = extractConcern(message)
-    const extractedSeverity = extractSeverity(message)
-    const extractedDuration = extractDuration(message)
-    const extractedSymptoms = extractSymptoms(message)
+    const extracted = extractInformation(message)
 
-    const updatedContext: Partial<UserHealthContext> = {
-      concern: extractedConcern || context.concern,
-      symptoms: extractedSymptoms.length > 0 ? extractedSymptoms : context.symptoms,
-      severity: extractedSeverity !== 5 ? extractedSeverity : context.severity,
-      duration: extractedDuration !== 'recent' ? extractedDuration : context.duration,
+    // Build updated context - only update fields that were actually extracted
+    const updatedContext: Partial<UserHealthContext> = {}
+
+    if (extracted.concern) {
+      updatedContext.concern = extracted.concern
+    }
+    if (extracted.symptoms.length > 0) {
+      // Merge symptoms, avoiding duplicates
+      const existingSymptoms = new Set(context.symptoms.map(s => s.toLowerCase()))
+      const newSymptoms = extracted.symptoms.filter(s => !existingSymptoms.has(s.toLowerCase()))
+      if (newSymptoms.length > 0) {
+        updatedContext.symptoms = [...context.symptoms, ...newSymptoms]
+      }
+    }
+    if (extracted.duration) {
+      updatedContext.duration = extracted.duration
+    }
+    if (extracted.severity !== null) {
+      updatedContext.severity = extracted.severity
     }
 
     // Merge with existing context
@@ -153,10 +212,19 @@ export class MockAIService implements AIService {
       }
     }
 
-    // Need more information
+    // Need more information - get appropriate follow-up
     const followUp = getFollowUpQuestion(mergedContext)
+
+    // Generate contextual response based on what was extracted
+    let response = ''
+    if (extracted.concern || extracted.symptoms.length > 0 || extracted.duration || extracted.severity !== null) {
+      response = `I understand. ${followUp}`
+    } else {
+      response = followUp
+    }
+
     return {
-      response: `I understand. ${followUp}`,
+      response,
       extractedContext: updatedContext,
       isReadyForRecommendation: false,
       followUpQuestion: followUp,

@@ -15,12 +15,12 @@ function Button({
   disabled,
   ...props
 }: ButtonProps) {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
 
   const variants = {
-    primary: 'bg-primary-600 text-white hover:bg-primary-700',
-    secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200',
-    ghost: 'text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+    primary: 'bg-teal-600 text-white hover:bg-teal-700',
+    secondary: 'bg-ink-100 text-ink-900 hover:bg-ink-200',
+    ghost: 'text-ink-600 hover:text-ink-900 hover:bg-ink-100',
   }
 
   const sizes = {

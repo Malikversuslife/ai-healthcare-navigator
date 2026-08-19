@@ -1,7 +1,5 @@
 import { CareRecommendation } from '../../../shared/types'
 import { getCareLevelInfo } from '../data/care-levels'
-import { Card, CardHeader, CardContent } from '../../../shared/components/Card'
-import Button from '../../../shared/components/Button'
 
 interface CareRecommendationProps {
   recommendation: CareRecommendation
@@ -11,63 +9,85 @@ interface CareRecommendationProps {
 function CareRecommendationCard({ recommendation, onFindProviders }: CareRecommendationProps) {
   const careLevelInfo = getCareLevelInfo(recommendation.careLevel)
 
-  const careLevelColors = {
-    'emergency-care': 'bg-red-100 text-red-800 border-red-200',
-    'urgent-care': 'bg-orange-100 text-orange-800 border-orange-200',
-    'same-day-care': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    'routine-care': 'bg-green-100 text-green-800 border-green-200',
+  const careLevelStyles = {
+    'emergency-care': {
+      bg: 'bg-red-50',
+      border: 'border-red-200',
+      badge: 'bg-red-100 text-red-800',
+      icon: '🚨',
+    },
+    'urgent-care': {
+      bg: 'bg-orange-50',
+      border: 'border-orange-200',
+      badge: 'bg-orange-100 text-orange-800',
+      icon: '⚡',
+    },
+    'same-day-care': {
+      bg: 'bg-amber-50',
+      border: 'border-amber-200',
+      badge: 'bg-amber-100 text-amber-800',
+      icon: '📅',
+    },
+    'routine-care': {
+      bg: 'bg-teal-50',
+      border: 'border-teal-200',
+      badge: 'bg-teal-100 text-teal-800',
+      icon: '✓',
+    },
   }
 
+  const styles = careLevelStyles[recommendation.careLevel]
+
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Care Recommendation</h3>
-          <span className={`px-3 py-1 rounded-full text-sm font-medium border ${careLevelColors[recommendation.careLevel]}`}>
+    <div className={`rounded-2xl border-2 ${styles.border} ${styles.bg} p-6 mb-6`}>
+      {/* Header */}
+      <div className="flex items-start gap-3 mb-4">
+        <span className="text-2xl">{styles.icon}</span>
+        <div>
+          <h3 className="text-lg font-semibold text-ink-900">Your next step</h3>
+          <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium mt-2 ${styles.badge}`}>
             {careLevelInfo?.name}
           </span>
         </div>
-      </CardHeader>
-      <CardContent>
-        <p className="text-gray-700 mb-4">{recommendation.reasoning}</p>
+      </div>
 
-        {careLevelInfo && (
-          <div className="mb-4">
-            <p className="text-sm font-medium text-gray-600 mb-2">Examples of conditions at this level:</p>
-            <ul className="text-sm text-gray-600 list-disc list-inside">
-              {careLevelInfo.examples.map((example, i) => (
-                <li key={i}>{example}</li>
-              ))}
-            </ul>
-          </div>
-        )}
+      {/* Reasoning */}
+      <p className="text-ink-700 mb-4 leading-relaxed">{recommendation.reasoning}</p>
 
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-          <p className="text-sm text-yellow-800">
-            <strong>Important:</strong> {recommendation.disclaimer}
-          </p>
+      {/* Care Level Description */}
+      {careLevelInfo && (
+        <div className="mb-4 p-3 bg-white rounded-xl border border-ink-100">
+          <p className="text-sm text-ink-600">{careLevelInfo.description}</p>
         </div>
+      )}
 
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-600">Recommended next steps:</p>
-          {recommendation.nextSteps.map((step: { label: string; description: string }, i: number) => (
-            <div key={i} className="flex items-start gap-2">
-              <span className="text-primary-600 mt-0.5">•</span>
-              <div>
-                <p className="text-sm font-medium text-gray-900">{step.label}</p>
-                <p className="text-sm text-gray-600">{step.description}</p>
-              </div>
+      {/* Next Steps */}
+      <div className="space-y-2 mb-4">
+        <p className="text-sm font-medium text-ink-700">What we recommend:</p>
+        {recommendation.nextSteps.map((step: { type: string; label: string; description: string }, i: number) => (
+          <div key={i} className="flex items-start gap-2">
+            <span className="text-teal-600 mt-0.5">•</span>
+            <div>
+              <p className="text-sm font-medium text-ink-900">{step.label}</p>
+              <p className="text-sm text-ink-600">{step.description}</p>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
+      </div>
 
-        <div className="mt-6">
-          <Button onClick={onFindProviders} className="w-full">
-            Find Healthcare Providers
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      {/* CTA Button */}
+      <button
+        onClick={onFindProviders}
+        className="w-full px-6 py-3 bg-teal-600 text-white rounded-xl font-medium hover:bg-teal-700 transition-colors"
+      >
+        Find a provider
+      </button>
+
+      {/* Disclaimer */}
+      <p className="text-xs text-ink-500 mt-4 leading-relaxed">
+        {recommendation.disclaimer}
+      </p>
+    </div>
   )
 }
 

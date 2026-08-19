@@ -23,7 +23,7 @@ export function containsEmergencyIndicators(context: UserHealthContext): boolean
 
   if (EMERGENCY_SYMPTOMS.some((s: string) => lowerConcern.includes(s))) return true
   if (lowerSymptoms.some((s: string) => EMERGENCY_SYMPTOMS.some((e: string) => s.includes(e)))) return true
-  if (context.severity >= 9) return true
+  if (context.severity !== null && context.severity >= 9) return true
   return false
 }
 
@@ -32,15 +32,15 @@ export function determineCareLevel(context: UserHealthContext): CareLevel {
   if (containsEmergencyIndicators(context)) return 'emergency-care'
 
   // Urgent - severe symptoms or high severity
-  if (context.severity >= 7) return 'urgent-care'
+  if (context.severity !== null && context.severity >= 7) return 'urgent-care'
   if (URGENT_SYMPTOMS.some((s: string) => context.symptoms.some((sym: string) => sym.toLowerCase().includes(s)))) {
     return 'urgent-care'
   }
 
   // Same-day - moderate severity or recent onset with moderate symptoms
-  if (context.severity >= 4) return 'same-day-care'
+  if (context.severity !== null && context.severity >= 4) return 'same-day-care'
 
-  // Routine - mild symptoms
+  // Routine - mild symptoms or unknown severity
   return 'routine-care'
 }
 

@@ -60,9 +60,16 @@ export interface UserHealthContext {
   concern: string
   symptoms: string[]
   duration: string
-  severity: number
+  severity: number | null
   location?: string
   insurance?: string
+}
+
+export interface ConversationProgress {
+  concernCollected: boolean
+  symptomsCollected: boolean
+  durationCollected: boolean
+  severityCollected: boolean
 }
 
 export interface Message {
@@ -95,4 +102,5 @@ export interface ConversationState {
   providers: Provider[]
   selectedInsurance: string | null
   isLoading: boolean
+  progress: ConversationProgress
 }

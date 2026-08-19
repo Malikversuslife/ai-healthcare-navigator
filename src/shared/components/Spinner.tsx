@@ -6,13 +6,13 @@ interface SpinnerProps {
 function Spinner({ size = 'md', className = '' }: SpinnerProps) {
   const sizes = {
     sm: 'h-4 w-4',
-    md: 'h-8 w-8',
-    lg: 'h-12 w-12',
+    md: 'h-6 w-6',
+    lg: 'h-8 w-8',
   }
 
   return (
     <svg
-      className={`animate-spin text-primary-600 ${sizes[size]} ${className}`}
+      className={`animate-spin text-teal-600 ${sizes[size]} ${className}`}
       fill="none"
       viewBox="0 0 24 24"
     >

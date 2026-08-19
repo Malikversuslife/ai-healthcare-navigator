@@ -5,6 +5,7 @@ import {
   Message,
   UserHealthContext,
   Provider,
+  ConversationProgress,
 } from '../../../shared/types'
 import { generateId } from '../../../shared/utils'
 import { getAIService } from '../../../services/ai'
@@ -20,7 +21,15 @@ type ConversationAction =
   | { type: 'SET_PROVIDERS'; providers: Provider[] }
   | { type: 'SET_LOCATION'; location: string }
   | { type: 'SET_INSURANCE'; insuranceId: string }
+  | { type: 'UPDATE_PROGRESS'; progress: Partial<ConversationProgress> }
   | { type: 'RESET' }
+
+const initialProgress: ConversationProgress = {
+  concernCollected: false,
+  symptomsCollected: false,
+  durationCollected: false,
+  severityCollected: false,
+}
 
 const initialState: ConversationState = {
   messages: [],
@@ -29,12 +38,22 @@ const initialState: ConversationState = {
     concern: '',
     symptoms: [],
     duration: '',
-    severity: 5,
+    severity: null,
   },
   recommendation: null,
   providers: [],
   selectedInsurance: null,
   isLoading: false,
+  progress: initialProgress,
+}
+
+function calculateProgress(context: UserHealthContext): ConversationProgress {
+  return {
+    concernCollected: !!context.concern,
+    symptomsCollected: context.symptoms.length > 0,
+    durationCollected: !!context.duration,
+    severityCollected: context.severity !== null && context.severity !== undefined,
+  }
 }
 
 function conversationReducer(
@@ -48,8 +67,14 @@ function conversationReducer(
       return { ...state, isLoading: action.isLoading }
     case 'SET_STEP':
       return { ...state, currentStep: action.step }
-    case 'UPDATE_CONTEXT':
-      return { ...state, userContext: { ...state.userContext, ...action.context } }
+    case 'UPDATE_CONTEXT': {
+      const newContext = { ...state.userContext, ...action.context }
+      return {
+        ...state,
+        userContext: newContext,
+        progress: calculateProgress(newContext),
+      }
+    }
     case 'SET_RECOMMENDATION':
       return { ...state, recommendation: action.recommendation }
     case 'SET_PROVIDERS':
@@ -58,6 +83,8 @@ function conversationReducer(
       return { ...state, userContext: { ...state.userContext, location: action.location } }
     case 'SET_INSURANCE':
       return { ...state, selectedInsurance: action.insuranceId }
+    case 'UPDATE_PROGRESS':
+      return { ...state, progress: { ...state.progress, ...action.progress } }
     case 'RESET':
       return initialState
     default:
@@ -167,7 +194,7 @@ export function useConversation() {
     const greeting: Message = {
       id: generateId(),
       role: 'assistant',
-      content: 'Hello! I\'m here to help you navigate your healthcare options. What brings you here today? Please describe your health concern.',
+      content: 'Hello! I\'m your healthcare navigator. I\'ll help you understand what kind of care may be appropriate and find providers near you.\n\nWhat\'s bothering you today?',
       timestamp: Date.now(),
     }
     dispatch({ type: 'ADD_MESSAGE', message: greeting })
