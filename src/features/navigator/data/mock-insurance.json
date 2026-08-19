@@ -1,0 +1,27 @@
+[
+  {
+    "id": "nhis",
+    "name": "National Health Insurance Scheme",
+    "provider": "NHIS"
+  },
+  {
+    "id": "leadway",
+    "name": "Leadway Health",
+    "provider": "Leadway"
+  },
+  {
+    "id": "axa-mansard",
+    "name": "AXA Mansard Health",
+    "provider": "AXA Mansard"
+  },
+  {
+    "id": "hygeia",
+    "name": "Hygeia HMO",
+    "provider": "Hygeia"
+  },
+  {
+    "id": "clearline",
+    "name": "Clearline HMO",
+    "provider": "Clearline"
+  }
+]

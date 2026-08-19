@@ -1,0 +1,152 @@
+[
+  {
+    "id": "p1",
+    "name": "Reddington Hospital",
+    "type": "hospital",
+    "specialty": "Multi-Specialty Hospital",
+    "location": {
+      "city": "Lagos",
+      "area": "Victoria Island",
+      "address": "12 Idowu Martins Street, Victoria Island, Lagos"
+    },
+    "availability": "available",
+    "acceptedInsurance": ["nhis", "leadway", "axa-mansard", "hygeia"],
+    "consultationFee": 25000,
+    "rating": 4.7
+  },
+  {
+    "id": "p2",
+    "name": "Lagoon Hospital",
+    "type": "hospital",
+    "specialty": "Multi-Specialty Hospital",
+    "location": {
+      "city": "Lagos",
+      "area": "Obalende",
+      "address": "4 Breadfruit Street, Lagos Island"
+    },
+    "availability": "available",
+    "acceptedInsurance": ["nhis", "leadway", "clearline"],
+    "consultationFee": 30000,
+    "rating": 4.6
+  },
+  {
+    "id": "p3",
+    "name": "Lovefield Hospital",
+    "type": "clinic",
+    "specialty": "General Practice",
+    "location": {
+      "city": "Lagos",
+      "area": "Lekki",
+      "address": "15 Admiralty Way, Lekki Phase 1"
+    },
+    "availability": "available",
+    "acceptedInsurance": ["nhis", "hygeia", "clearline"],
+    "consultationFee": 15000,
+    "rating": 4.4
+  },
+  {
+    "id": "p4",
+    "name": "National Hospital Abuja",
+    "type": "hospital",
+    "specialty": "Multi-Specialty Hospital",
+    "location": {
+      "city": "Abuja",
+      "area": "Garki",
+      "address": "Plot 132, Central District, Abuja"
+    },
+    "availability": "limited",
+    "acceptedInsurance": ["nhis", "leadway", "axa-mansard"],
+    "consultationFee": 20000,
+    "rating": 4.5
+  },
+  {
+    "id": "p5",
+    "name": "Cedarcrest Hospital",
+    "type": "hospital",
+    "specialty": "Multi-Specialty Hospital",
+    "location": {
+      "city": "Abuja",
+      "area": "Apo",
+      "address": "11 Ebitu Ukiwe Street, Apo District"
+    },
+    "availability": "available",
+    "acceptedInsurance": ["nhis", "leadway", "hygeia", "axa-mansard"],
+    "consultationFee": 25000,
+    "rating": 4.6
+  },
+  {
+    "id": "p6",
+    "name": "St. Nicholas Hospital",
+    "type": "hospital",
+    "specialty": "Multi-Specialty Hospital",
+    "location": {
+      "city": "Lagos",
+      "area": "Lagos Island",
+      "address": "57 Campbell Street, Lagos Island"
+    },
+    "availability": "available",
+    "acceptedInsurance": ["nhis", "leadway", "clearline"],
+    "consultationFee": 28000,
+    "rating": 4.7
+  },
+  {
+    "id": "p7",
+    "name": "Medicaid Hospital",
+    "type": "clinic",
+    "specialty": "General Practice",
+    "location": {
+      "city": "Lagos",
+      "area": "Ikeja",
+      "address": "25 Awolowo Road, Ikeja"
+    },
+    "availability": "available",
+    "acceptedInsurance": ["nhis", "hygeia"],
+    "consultationFee": 12000,
+    "rating": 4.3
+  },
+  {
+    "id": "p8",
+    "name": "Eko Hospital",
+    "type": "hospital",
+    "specialty": "Multi-Specialty Hospital",
+    "location": {
+      "city": "Lagos",
+      "area": "Surulere",
+      "address": "31 Bode Thomas Street, Surulere"
+    },
+    "availability": "limited",
+    "acceptedInsurance": ["nhis", "leadway", "axa-mansard", "hygeia"],
+    "consultationFee": 22000,
+    "rating": 4.4
+  },
+  {
+    "id": "p9",
+    "name": "UITH Telemedicine",
+    "type": "telehealth",
+    "specialty": "General Consultation",
+    "location": {
+      "city": "Ilorin",
+      "area": "Tanke",
+      "address": "Virtual Consultation"
+    },
+    "availability": "available",
+    "acceptedInsurance": ["nhis"],
+    "consultationFee": 8000,
+    "rating": 4.2
+  },
+  {
+    "id": "p10",
+    "name": "LifeBridge Clinic",
+    "type": "clinic",
+    "specialty": "Family Medicine",
+    "location": {
+      "city": "Port Harcourt",
+      "area": "GRA",
+      "address": "14 Forces Avenue, GRA, Port Harcourt"
+    },
+    "availability": "available",
+    "acceptedInsurance": ["nhis", "leadway", "hygeia"],
+    "consultationFee": 18000,
+    "rating": 4.5
+  }
+]
