@@ -1,14 +1,66 @@
 export type CareLevel =
-  | 'routine-care'
-  | 'same-day-care'
-  | 'urgent-care'
-  | 'emergency-care'
+  | 'self_care'
+  | 'primary_care'
+  | 'urgent_care'
+  | 'emergency'
 
 export type CoverageStatus =
   | 'covered'
   | 'not-covered'
   | 'requires-authorization'
   | 'unknown'
+
+export interface Severity {
+  value?: number
+  description?: string
+}
+
+export type NavigationIntent =
+  | 'symptom_navigation'
+  | 'find_provider'
+  | 'find_hospital'
+  | 'appointment'
+  | 'insurance'
+  | 'treatment_followup'
+  | 'general_healthcare'
+
+export interface NavigationIntentResult {
+  intent: NavigationIntent
+  confidence?: number
+}
+
+export type NavigationState =
+  | 'understanding'
+  | 'collecting_context'
+  | 'safety_check'
+  | 'recommendation'
+  | 'provider_search'
+  | 'insurance_check'
+  | 'appointment'
+  | 'complete'
+  | 'emergency'
+
+export type NavigationAction =
+  | { type: 'collect_context'; missingFields: string[] }
+  | { type: 'safety_check' }
+  | { type: 'show_recommendation' }
+  | { type: 'search_providers' }
+  | { type: 'check_insurance' }
+  | { type: 'start_appointment' }
+  | { type: 'answer_general_question' }
+  | { type: 'emergency' }
+  | { type: 'complete' }
+
+export interface NavigationContext {
+  intent: NavigationIntent
+  state: NavigationState
+  userContext: UserHealthContext
+}
+
+export interface SafetyResult {
+  triggered: boolean
+  indicators: string[]
+}
 
 export interface Provider {
   id: string
@@ -60,7 +112,8 @@ export interface UserHealthContext {
   concern: string
   symptoms: string[]
   duration: string
-  severity: number | null
+  severity?: Severity
+  specialty?: string
   location?: string
   insurance?: string
 }
@@ -93,6 +146,7 @@ export type ConversationStep =
   | 'location-prompt'
   | 'coverage'
   | 'complete'
+  | 'emergency'
 
 export interface ConversationState {
   messages: Message[]
@@ -103,4 +157,6 @@ export interface ConversationState {
   selectedInsurance: string | null
   isLoading: boolean
   progress: ConversationProgress
+  navigationState: NavigationState
+  navigationIntent: NavigationIntent
 }

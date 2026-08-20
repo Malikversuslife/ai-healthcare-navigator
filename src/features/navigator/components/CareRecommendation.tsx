@@ -10,25 +10,25 @@ function CareRecommendationCard({ recommendation, onFindProviders }: CareRecomme
   const careLevelInfo = getCareLevelInfo(recommendation.careLevel)
 
   const careLevelStyles = {
-    'emergency-care': {
+    emergency: {
       bg: 'bg-red-50',
       border: 'border-red-200',
       badge: 'bg-red-100 text-red-800',
       icon: '🚨',
     },
-    'urgent-care': {
+    urgent_care: {
       bg: 'bg-orange-50',
       border: 'border-orange-200',
       badge: 'bg-orange-100 text-orange-800',
       icon: '⚡',
     },
-    'same-day-care': {
+    primary_care: {
       bg: 'bg-amber-50',
       border: 'border-amber-200',
       badge: 'bg-amber-100 text-amber-800',
       icon: '📅',
     },
-    'routine-care': {
+    self_care: {
       bg: 'bg-teal-50',
       border: 'border-teal-200',
       badge: 'bg-teal-100 text-teal-800',

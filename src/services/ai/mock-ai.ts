@@ -1,17 +1,5 @@
-import { UserHealthContext } from '../../shared/types'
+import { UserHealthContext, Severity } from '../../shared/types'
 import { AIService, AIExtractionResult } from './types'
-
-const SEVERITY_KEYWORDS = {
-  severe: ['severe', 'extreme', 'terrible', 'worst', 'unbearable', 'intense', 'sharp'],
-  moderate: ['moderate', 'noticeable', 'significant', 'bothersome', 'uncomfortable'],
-  mild: ['mild', 'slight', 'minor', 'light', 'barely', 'little'],
-}
-
-const DURATION_KEYWORDS = {
-  sudden: ['just now', 'suddenly', 'started', 'minutes ago', 'recently', 'today'],
-  recent: ['yesterday', 'few days', 'this week', '2 days', '3 days', '4 days'],
-  ongoing: ['weeks', 'months', 'years', 'chronic', 'long time', 'always', 'week'],
-}
 
 const CONCERN_PATTERNS = [
   { pattern: /head(ache)?|migraine/i, concern: 'headache' },
@@ -34,7 +22,7 @@ interface ExtractionResult {
   concern: string | null
   symptoms: string[]
   duration: string | null
-  severity: number | null
+  severity: Severity | null
 }
 
 function extractConcern(message: string): string | null {
@@ -70,46 +58,57 @@ function extractSymptoms(message: string): string[] {
 }
 
 function extractDuration(message: string): string | null {
-  const lower = message.toLowerCase()
+  // Preserve the user's actual description — do not convert to categories
 
-  // Check for specific duration mentions
-  if (DURATION_KEYWORDS.sudden.some(k => lower.includes(k))) return 'sudden'
-  if (DURATION_KEYWORDS.recent.some(k => lower.includes(k))) return 'recent'
-  if (DURATION_KEYWORDS.ongoing.some(k => lower.includes(k))) return 'ongoing'
+  // Check for explicit duration mentions and return the raw phrase
+  const durationPatterns = [
+    /(?:for|since|about|around|approximately|over|under|less than|more than)\s+[\w\s]+(?:hour|minute|day|week|month|year)s?/i,
+    /\d+\s*(?:hour|minute|day|week|month|year)s?\b/i,
+    /just now|suddenly|started|minutes ago|today|yesterday|few days|this week|chronic|long time/i,
+  ]
 
-  // Check for numeric duration (e.g., "18 hours", "2 days", "3 weeks")
-  const timeMatch = lower.match(/(\d+)\s*(hour|day|week|month|minute)/)
-  if (timeMatch) {
-    const num = parseInt(timeMatch[1])
-    const unit = timeMatch[2]
-    if (unit === 'minute' || (unit === 'hour' && num <= 24)) return 'sudden'
-    if (unit === 'hour' || (unit === 'day' && num <= 7)) return 'recent'
-    return 'ongoing'
+  for (const pattern of durationPatterns) {
+    const match = message.match(pattern)
+    if (match) {
+      return match[0].trim()
+    }
   }
 
   return null
 }
 
-function extractSeverity(message: string): number | null {
+function extractSeverity(message: string): Severity | null {
   const lower = message.toLowerCase()
-
-  // Check for severity keywords
-  if (SEVERITY_KEYWORDS.severe.some(k => lower.includes(k))) return 8
-  if (SEVERITY_KEYWORDS.moderate.some(k => lower.includes(k))) return 5
-  if (SEVERITY_KEYWORDS.mild.some(k => lower.includes(k))) return 2
 
   // Check for numeric severity (e.g., "7 out of 10", "severity 8")
   const numberMatch = lower.match(/(\d+)\s*(out of|\/)\s*10/)
   if (numberMatch) {
     const num = parseInt(numberMatch[1])
-    if (num >= 1 && num <= 10) return num
+    if (num >= 1 && num <= 10) {
+      return { value: num }
+    }
   }
 
-  // Check for standalone number 1-10
-  const standaloneMatch = lower.match(/\b([1-9]|10)\b/)
-  if (standaloneMatch) {
-    const num = parseInt(standaloneMatch[1])
-    if (num >= 1 && num <= 10) return num
+  // Check for standalone number 1-10 in severity context
+  if (lower.includes('severity') || lower.includes('rate') || lower.includes('scale')) {
+    const standaloneMatch = lower.match(/\b([1-9]|10)\b/)
+    if (standaloneMatch) {
+      const num = parseInt(standaloneMatch[1])
+      if (num >= 1 && num <= 10) {
+        return { value: num }
+      }
+    }
+  }
+
+  // Check for severity keywords — store as description, NOT as numerical value
+  if (/(?:severe|extreme|terrible|worst|unbearable|intense|sharp)/i.test(lower)) {
+    return { description: 'severe' }
+  }
+  if (/(?:moderate|noticeable|significant|bothersome|uncomfortable)/i.test(lower)) {
+    return { description: 'moderate' }
+  }
+  if (/(?:mild|slight|minor|light|barely|little)/i.test(lower)) {
+    return { description: 'mild' }
   }
 
   return null
@@ -128,7 +127,7 @@ function getMissingInformation(context: UserHealthContext): string[] {
   const missing: string[] = []
   if (!context.concern) missing.push('concern')
   if (!context.duration) missing.push('duration')
-  if (context.severity === null || context.severity === undefined) missing.push('severity')
+  if (context.severity === undefined) missing.push('severity')
   if (context.symptoms.length === 0) missing.push('symptoms')
   return missing
 }
@@ -143,7 +142,7 @@ function getFollowUpQuestion(context: UserHealthContext): string {
     return 'How long have you been experiencing this?'
   }
   if (missing.includes('severity')) {
-    return 'On a scale of 1 to 10, how would you rate the severity?'
+    return 'How would you describe the severity? You can say something like "mild", "moderate", or "severe", or rate it 1 to 10.'
   }
   if (missing.includes('symptoms')) {
     return 'Are there any other symptoms you\'re experiencing alongside this?'
@@ -162,7 +161,7 @@ export class MockAIService implements AIService {
     // Extract information from message
     const extracted = extractInformation(message)
 
-    // Build updated context - only update fields that were actually extracted
+    // Build updated context — only update fields that were actually extracted
     const updatedContext: Partial<UserHealthContext> = {}
 
     if (extracted.concern) {

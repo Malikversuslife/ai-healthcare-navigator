@@ -1,103 +1,28 @@
-import { UserHealthContext, CareLevel, CareRecommendation } from '../../../shared/types'
-
-export function isContextSufficient(context: UserHealthContext): boolean {
-  // Application determines readiness based on having core information
-  const hasConcern = !!context.concern
-  const hasSymptoms = context.symptoms.length > 0
-  const hasDuration = !!context.duration
-  const hasSeverity = context.severity !== null && context.severity !== undefined
-
-  // Need at least concern + one other piece of information
-  return hasConcern && (hasSymptoms || hasDuration || hasSeverity)
-}
-
-const EMERGENCY_SYMPTOMS = [
-  'chest pain',
-  'difficulty breathing',
-  'severe bleeding',
-  'unconscious',
-  'stroke',
-  'seizure',
-]
-
-const URGENT_SYMPTOMS = [
-  'severe pain',
-  'high fever',
-  'persistent vomiting',
-  'difficulty swallowing',
-  'severe allergic reaction',
-]
+import { UserHealthContext, CareLevel, CareRecommendation, NavigationIntent, NavigationState, NavigationAction, NavigationContext } from '../../../shared/types'
+import { containsEmergencyIndicators as engineContainsEmergencyIndicators, isContextSufficient as engineIsContextSufficient, getMissingContextFields as engineGetMissingContextFields, evaluateNavigation as engineEvaluateNavigation, determineCareLevel as engineDetermineCareLevel, buildRecommendation as engineBuildRecommendation } from '../engine'
 
 export function containsEmergencyIndicators(context: UserHealthContext): boolean {
-  const lowerConcern = context.concern.toLowerCase()
-  const lowerSymptoms = context.symptoms.map((s: string) => s.toLowerCase())
+  return engineContainsEmergencyIndicators(context).triggered
+}
 
-  if (EMERGENCY_SYMPTOMS.some((s: string) => lowerConcern.includes(s))) return true
-  if (lowerSymptoms.some((s: string) => EMERGENCY_SYMPTOMS.some((e: string) => s.includes(e)))) return true
-  if (context.severity !== null && context.severity >= 9) return true
-  return false
+export function isContextSufficient(intent: NavigationIntent, context: UserHealthContext): boolean {
+  return engineIsContextSufficient(intent, context)
+}
+
+export function getMissingContextFields(intent: NavigationIntent, context: UserHealthContext): string[] {
+  return engineGetMissingContextFields(intent, context)
+}
+
+export function evaluateNavigation(navContext: NavigationContext): NavigationAction {
+  return engineEvaluateNavigation(navContext)
 }
 
 export function determineCareLevel(context: UserHealthContext): CareLevel {
-  // Emergency
-  if (containsEmergencyIndicators(context)) return 'emergency-care'
-
-  // Urgent - severe symptoms or high severity
-  if (context.severity !== null && context.severity >= 7) return 'urgent-care'
-  if (URGENT_SYMPTOMS.some((s: string) => context.symptoms.some((sym: string) => sym.toLowerCase().includes(s)))) {
-    return 'urgent-care'
-  }
-
-  // Same-day - moderate severity or recent onset with moderate symptoms
-  if (context.severity !== null && context.severity >= 4) return 'same-day-care'
-
-  // Routine - mild symptoms or unknown severity
-  return 'routine-care'
+  return engineDetermineCareLevel(context)
 }
 
-export function buildRecommendation(
-  _context: UserHealthContext,
-  careLevel: CareLevel
-): CareRecommendation {
-  const recommendations: Record<CareLevel, Omit<CareRecommendation, 'careLevel'>> = {
-    'emergency-care': {
-      reasoning: 'Based on the severity of your symptoms, you should seek immediate emergency care.',
-      disclaimer: 'This is not a medical diagnosis. If you are experiencing a medical emergency, please call 112 or go to the nearest emergency room immediately.',
-      nextSteps: [
-        { type: 'emergency', label: 'Call Emergency Services', description: 'Dial 112 immediately' },
-        { type: 'find-provider', label: 'Find Nearest Hospital', description: 'Locate an emergency room near you' },
-      ],
-    },
-    'urgent-care': {
-      reasoning: 'Your symptoms suggest you should be seen by a healthcare provider today or as soon as possible.',
-      disclaimer: 'This guidance is based on the information you provided. A healthcare professional can provide a proper evaluation.',
-      nextSteps: [
-        { type: 'find-provider', label: 'Find Urgent Care', description: 'Locate an urgent care center or walk-in clinic' },
-        { type: 'learn-more', label: 'Learn About Your Symptoms', description: 'Find reliable health information' },
-      ],
-    },
-    'same-day-care': {
-      reasoning: 'Based on your symptoms, you should consider visiting a clinic or hospital within the next 24 hours.',
-      disclaimer: 'This recommendation is based on the information you shared. Please consult a healthcare professional for proper evaluation.',
-      nextSteps: [
-        { type: 'find-provider', label: 'Find a Clinic', description: 'Locate a clinic near you' },
-        { type: 'learn-more', label: 'Self-Care Tips', description: 'Basic care information while you wait' },
-      ],
-    },
-    'routine-care': {
-      reasoning: 'Your symptoms appear to be manageable. You should schedule an appointment with a healthcare provider within the next few days.',
-      disclaimer: 'This is general guidance based on the information you provided. A healthcare professional can provide personalized advice.',
-      nextSteps: [
-        { type: 'find-provider', label: 'Find a Doctor', description: 'Schedule an appointment with a primary care provider' },
-        { type: 'learn-more', label: 'Self-Care Tips', description: 'What you can do at home' },
-      ],
-    },
-  }
-
-  const rec = recommendations[careLevel]
-
-  return {
-    careLevel,
-    ...rec,
-  }
+export function buildRecommendation(context: UserHealthContext, careLevel: CareLevel): CareRecommendation {
+  return engineBuildRecommendation(context, careLevel)
 }
+
+export type { NavigationIntent, NavigationState, NavigationAction, NavigationContext }

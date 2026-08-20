@@ -6,10 +6,12 @@ import {
   UserHealthContext,
   Provider,
   ConversationProgress,
+  NavigationIntent,
+  NavigationState,
 } from '../../../shared/types'
 import { generateId } from '../../../shared/utils'
 import { getAIService } from '../../../services/ai'
-import { containsEmergencyIndicators, isContextSufficient, determineCareLevel, buildRecommendation } from './useNavigation'
+import { evaluateNavigation, determineCareLevel, buildRecommendation } from '../engine'
 import { searchProviders } from './useProviderSearch'
 
 type ConversationAction =
@@ -22,6 +24,8 @@ type ConversationAction =
   | { type: 'SET_LOCATION'; location: string }
   | { type: 'SET_INSURANCE'; insuranceId: string }
   | { type: 'UPDATE_PROGRESS'; progress: Partial<ConversationProgress> }
+  | { type: 'SET_NAVIGATION_STATE'; state: NavigationState }
+  | { type: 'SET_NAVIGATION_INTENT'; intent: NavigationIntent }
   | { type: 'RESET' }
 
 const initialProgress: ConversationProgress = {
@@ -38,13 +42,14 @@ const initialState: ConversationState = {
     concern: '',
     symptoms: [],
     duration: '',
-    severity: null,
   },
   recommendation: null,
   providers: [],
   selectedInsurance: null,
   isLoading: false,
   progress: initialProgress,
+  navigationState: 'understanding',
+  navigationIntent: 'general_healthcare',
 }
 
 function calculateProgress(context: UserHealthContext): ConversationProgress {
@@ -52,7 +57,7 @@ function calculateProgress(context: UserHealthContext): ConversationProgress {
     concernCollected: !!context.concern,
     symptomsCollected: context.symptoms.length > 0,
     durationCollected: !!context.duration,
-    severityCollected: context.severity !== null && context.severity !== undefined,
+    severityCollected: context.severity !== undefined,
   }
 }
 
@@ -85,11 +90,56 @@ function conversationReducer(
       return { ...state, selectedInsurance: action.insuranceId }
     case 'UPDATE_PROGRESS':
       return { ...state, progress: { ...state.progress, ...action.progress } }
+    case 'SET_NAVIGATION_STATE':
+      return { ...state, navigationState: action.state }
+    case 'SET_NAVIGATION_INTENT':
+      return { ...state, navigationIntent: action.intent }
     case 'RESET':
       return initialState
     default:
       return state
   }
+}
+
+function detectIntent(content: string): NavigationIntent {
+  const lower = content.toLowerCase()
+
+  if (lower.includes('appointment') || lower.includes('book') || lower.includes('schedule')) {
+    return 'appointment'
+  }
+  if (lower.includes('find') && (lower.includes('doctor') || lower.includes('provider') || lower.includes('specialist') || lower.includes('clinic'))) {
+    return 'find_provider'
+  }
+  if (lower.includes('find') && lower.includes('hospital')) {
+    return 'find_hospital'
+  }
+  if (lower.includes('insurance') || lower.includes('coverage') || lower.includes('hmo') || lower.includes('nhis')) {
+    return 'insurance'
+  }
+  if (lower.includes('follow') || lower.includes('treatment') || lower.includes('medication') || lower.includes('prescription')) {
+    return 'treatment_followup'
+  }
+
+  return 'symptom_navigation'
+}
+
+function generateFollowUpPrompt(missingFields: string[]): string {
+  const prompts: Record<string, string> = {
+    concern: 'What brings you here today? Can you describe what you\'re experiencing?',
+    symptoms: 'Are there any other symptoms you\'re experiencing alongside this?',
+    duration: 'How long have you been experiencing this?',
+    specialty: 'What type of healthcare provider are you looking for?',
+    location: 'What city or area are you located in?',
+    insurance: 'Do you have an insurance plan? If so, which one?',
+  }
+
+  for (const field of missingFields) {
+    if (prompts[field]) {
+      return prompts[field]
+    }
+  }
+
+  return 'Can you tell me more about what you\'re experiencing?'
 }
 
 export function useConversation() {
@@ -107,56 +157,150 @@ export function useConversation() {
   }, [])
 
   const sendMessage = useCallback(async (content: string) => {
-    // Add user message
     addMessage('user', content)
     dispatch({ type: 'SET_LOADING', isLoading: true })
+
+    // Detect intent from user message (application-owned)
+    const intent = detectIntent(content)
+    dispatch({ type: 'SET_NAVIGATION_INTENT', intent })
+
+    // Set initial navigation state
+    if (state.navigationState === 'understanding') {
+      dispatch({ type: 'SET_NAVIGATION_STATE', state: 'collecting_context' })
+    }
 
     try {
       const aiService = getAIService()
 
-      // Process with AI service
+      // AI extracts structured context (AI only extracts, does not decide)
       const result = await aiService.processMessage(content, state.userContext)
 
-      // Update context with extracted information
+      // Application merges extracted context
       if (result.extractedContext) {
         dispatch({ type: 'UPDATE_CONTEXT', context: result.extractedContext })
       }
 
       const updatedContext = { ...state.userContext, ...result.extractedContext }
 
-      // Check for emergency
-      if (containsEmergencyIndicators(updatedContext)) {
-        addMessage('assistant', result.response, { extractedContext: result.extractedContext })
-        dispatch({ type: 'SET_STEP', step: 'recommendation' })
-        dispatch({ type: 'SET_LOADING', isLoading: false })
-        return
-      }
+      // Application evaluates navigation (safety → context → action)
+      const navAction = evaluateNavigation({
+        intent,
+        state: state.navigationState,
+        userContext: updatedContext,
+      })
 
-      // If context is sufficient, determine care level
-      if (isContextSufficient(updatedContext)) {
-        const careLevel = determineCareLevel(updatedContext)
-        const recommendation = buildRecommendation(updatedContext, careLevel)
+      // Handle each action type
+      switch (navAction.type) {
+        case 'emergency': {
+          dispatch({ type: 'SET_NAVIGATION_STATE', state: 'emergency' })
+          dispatch({ type: 'SET_STEP', step: 'recommendation' })
 
-        addMessage('assistant', result.response, {
-          extractedContext: result.extractedContext,
-          recommendation,
-        })
+          const recommendation = buildRecommendation(updatedContext, 'emergency')
+          dispatch({ type: 'SET_RECOMMENDATION', recommendation })
 
-        dispatch({ type: 'SET_RECOMMENDATION', recommendation })
-        dispatch({ type: 'SET_STEP', step: 'recommendation' })
-      } else {
-        // Continue conversation
-        addMessage('assistant', result.response, {
-          extractedContext: result.extractedContext,
-        })
-        dispatch({ type: 'SET_STEP', step: 'follow-up' })
+          addMessage('assistant', result.response, {
+            extractedContext: result.extractedContext,
+            recommendation,
+          })
+          break
+        }
+
+        case 'collect_context': {
+          dispatch({ type: 'SET_NAVIGATION_STATE', state: 'collecting_context' })
+          dispatch({ type: 'SET_STEP', step: 'follow-up' })
+
+          // Application determines the follow-up question based on missing fields
+          const appFollowUp = generateFollowUpPrompt(navAction.missingFields)
+
+          // Use AI response if it has content, otherwise use application-determined prompt
+          const responseText = result.response || appFollowUp
+
+          addMessage('assistant', responseText, {
+            extractedContext: result.extractedContext,
+          })
+          break
+        }
+
+        case 'safety_check': {
+          dispatch({ type: 'SET_NAVIGATION_STATE', state: 'safety_check' })
+
+          // Context sufficient for symptom navigation — determine care level
+          const careLevel = determineCareLevel(updatedContext)
+          const recommendation = buildRecommendation(updatedContext, careLevel)
+
+          dispatch({ type: 'SET_NAVIGATION_STATE', state: 'recommendation' })
+          dispatch({ type: 'SET_RECOMMENDATION', recommendation })
+          dispatch({ type: 'SET_STEP', step: 'recommendation' })
+
+          addMessage('assistant', result.response, {
+            extractedContext: result.extractedContext,
+            recommendation,
+          })
+          break
+        }
+
+        case 'show_recommendation': {
+          dispatch({ type: 'SET_STEP', step: 'recommendation' })
+          addMessage('assistant', result.response, {
+            extractedContext: result.extractedContext,
+            recommendation: state.recommendation ?? undefined,
+          })
+          break
+        }
+
+        case 'search_providers': {
+          dispatch({ type: 'SET_NAVIGATION_STATE', state: 'provider_search' })
+          dispatch({ type: 'SET_STEP', step: 'provider-search' })
+
+          addMessage('assistant', result.response, {
+            extractedContext: result.extractedContext,
+          })
+          break
+        }
+
+        case 'check_insurance': {
+          dispatch({ type: 'SET_NAVIGATION_STATE', state: 'insurance_check' })
+          dispatch({ type: 'SET_STEP', step: 'coverage' })
+
+          addMessage('assistant', result.response, {
+            extractedContext: result.extractedContext,
+          })
+          break
+        }
+
+        case 'start_appointment': {
+          dispatch({ type: 'SET_NAVIGATION_STATE', state: 'appointment' })
+          dispatch({ type: 'SET_STEP', step: 'intake' })
+
+          addMessage('assistant', result.response, {
+            extractedContext: result.extractedContext,
+          })
+          break
+        }
+
+        case 'answer_general_question': {
+          dispatch({ type: 'SET_NAVIGATION_STATE', state: 'complete' })
+          dispatch({ type: 'SET_STEP', step: 'complete' })
+
+          addMessage('assistant', result.response, {
+            extractedContext: result.extractedContext,
+          })
+          break
+        }
+
+        case 'complete': {
+          addMessage('assistant', result.response, {
+            extractedContext: result.extractedContext,
+          })
+          break
+        }
       }
     } catch {
       addMessage('assistant', 'I apologize, but I encountered an error. Please try again.')
     } finally {
       dispatch({ type: 'SET_LOADING', isLoading: false })
     }
-  }, [state.userContext, addMessage])
+  }, [state.userContext, state.navigationState, state.recommendation, addMessage])
 
   const findProviders = useCallback((location?: string) => {
     const filter = {
@@ -173,7 +317,6 @@ export function useConversation() {
   const selectInsurance = useCallback((insuranceId: string) => {
     dispatch({ type: 'SET_INSURANCE', insuranceId: insuranceId })
 
-    // Re-filter providers with new insurance
     if (state.providers.length > 0) {
       const filtered = state.providers.filter((p: Provider) =>
         p.acceptedInsurance.includes(insuranceId)
@@ -186,7 +329,6 @@ export function useConversation() {
 
   const setLocation = useCallback((location: string) => {
     dispatch({ type: 'SET_LOCATION', location })
-    // Re-search with new location
     findProviders(location)
   }, [findProviders])
 

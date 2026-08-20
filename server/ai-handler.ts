@@ -12,18 +12,13 @@ IMPORTANT RULES:
 Your job is to:
 1. Extract the health concern from the user's message
 2. Identify symptoms mentioned
-3. Determine how long they've had the symptom (duration)
-4. Understand severity if mentioned
+3. Preserve the user's actual duration description (do not convert to categories)
+4. Extract severity as a number (1-10) if provided, or as a description (mild/moderate/severe) if provided
 5. Ask one follow-up question at a time to gather missing information
 
-Duration mapping:
-- "sudden": just started, minutes/hours ago, today
-- "recent": 1-7 days
-- "ongoing": more than a week, chronic
+Duration: Preserve exactly what the user says (e.g., "about 18 hours", "since yesterday", "a few weeks")
 
-Severity mapping:
-- Extract if user mentions a number (1-10)
-- Map words: mild=2-3, moderate=5-6, severe=7-8, extreme=9-10
+Severity: If user provides a number, use { "value": N }. If user provides a description, use { "description": "word" }. Do not invent numerical values when the user did not provide them.
 
 Be conversational but efficient. Ask only what's missing. Never ask for information already provided.`
 
@@ -48,12 +43,21 @@ const EXTRACTION_SCHEMA = {
         },
         duration: {
           type: ['string', 'null'],
-          enum: ['sudden', 'recent', 'ongoing', null],
-          description: 'How long the user has had the symptom',
+          description: 'The user\'s actual duration description, preserved as-is',
         },
         severity: {
-          type: ['number', 'null'],
-          description: 'Severity rating 1-10 or null',
+          type: ['object', 'null'],
+          properties: {
+            value: {
+              type: ['number', 'null'],
+              description: 'Numeric severity 1-10 if user provided a number',
+            },
+            description: {
+              type: ['string', 'null'],
+              description: 'Text description if user said mild/moderate/severe',
+            },
+          },
+          description: 'Severity as number or description, not both',
         },
       },
       required: ['concern', 'symptoms', 'duration', 'severity'],
@@ -72,7 +76,7 @@ interface NavigateRequest {
     concern: string
     symptoms: string[]
     duration: string
-    severity: number | null
+    severity?: { value?: number; description?: string }
     location?: string
     insurance?: string
   }
@@ -83,7 +87,7 @@ function getMissingFields(context: NavigateRequest['context']): string[] {
   if (!context.concern) missing.push('concern')
   if (context.symptoms.length === 0) missing.push('symptoms')
   if (!context.duration) missing.push('duration')
-  if (context.severity === null || context.severity === undefined) missing.push('severity')
+  if (!context.severity) missing.push('severity')
   return missing
 }
 
@@ -103,19 +107,16 @@ function parseBody(req: IncomingMessage): Promise<NavigateRequest> {
 }
 
 export async function handleNavigate(req: IncomingMessage, res: ServerResponse) {
-  // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
 
-  // Handle preflight
   if (req.method === 'OPTIONS') {
     res.writeHead(204)
     res.end()
     return
   }
 
-  // Only allow POST
   if (req.method !== 'POST') {
     res.writeHead(405, { 'Content-Type': 'application/json' })
     res.end(JSON.stringify({ error: 'Method not allowed' }))
@@ -144,12 +145,12 @@ export async function handleNavigate(req: IncomingMessage, res: ServerResponse) 
 - Concern: ${context.concern || 'not provided'}
 - Symptoms: ${context.symptoms.length > 0 ? context.symptoms.join(', ') : 'not provided'}
 - Duration: ${context.duration || 'not provided'}
-- Severity: ${context.severity !== null ? context.severity : 'not provided'}
+- Severity: ${context.severity ? JSON.stringify(context.severity) : 'not provided'}
 - Missing information: ${missingFields.length > 0 ? missingFields.join(', ') : 'none'}
 
 User message: "${message}"
 
-Extract information from this message.`
+Extract information from this message. Preserve the user's actual duration description.`
 
     const client = new OpenAI({ apiKey })
 

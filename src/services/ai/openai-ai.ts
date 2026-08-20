@@ -1,4 +1,4 @@
-import { UserHealthContext } from '../../shared/types'
+import { UserHealthContext, Severity } from '../../shared/types'
 import { AIService, AIExtractionResult } from './types'
 
 interface APIResponse {
@@ -7,7 +7,7 @@ interface APIResponse {
     concern: string | null
     symptoms: string[]
     duration: string | null
-    severity: number | null
+    severity: { value?: number; description?: string } | null
   }
   followUpQuestion: string | null
 }
@@ -57,8 +57,18 @@ export class OpenAIAIService implements AIService {
       if (data.extractedContext.duration) {
         extractedContext.duration = data.extractedContext.duration
       }
-      if (data.extractedContext.severity !== null && data.extractedContext.severity !== undefined) {
-        extractedContext.severity = data.extractedContext.severity
+      if (data.extractedContext.severity) {
+        const sev = data.extractedContext.severity
+        const severity: Severity = {}
+        if (sev.value !== undefined && sev.value !== null) {
+          severity.value = sev.value
+        }
+        if (sev.description) {
+          severity.description = sev.description
+        }
+        if (severity.value !== undefined || severity.description) {
+          extractedContext.severity = severity
+        }
       }
 
       return {

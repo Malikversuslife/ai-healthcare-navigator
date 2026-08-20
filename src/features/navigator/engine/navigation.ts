@@ -1,0 +1,133 @@
+import {
+  UserHealthContext,
+  CareLevel,
+  CareRecommendation,
+  NavigationContext,
+  NavigationAction,
+} from '../../../shared/types'
+import { containsEmergencyIndicators } from './safety'
+import { isContextSufficient, getMissingContextFields } from './context'
+
+export function evaluateNavigation(
+  navContext: NavigationContext
+): NavigationAction {
+  const { intent, state, userContext } = navContext
+
+  // Safety check is always evaluated first
+  const safety = containsEmergencyIndicators(userContext)
+  if (safety.triggered) {
+    return { type: 'emergency' }
+  }
+
+  // If we're already in recommendation/provider/insurance/appointment states,
+  // continue that flow
+  if (state === 'recommendation') {
+    return { type: 'show_recommendation' }
+  }
+  if (state === 'provider_search') {
+    return { type: 'search_providers' }
+  }
+  if (state === 'insurance_check') {
+    return { type: 'check_insurance' }
+  }
+  if (state === 'appointment') {
+    return { type: 'start_appointment' }
+  }
+  if (state === 'complete') {
+    return { type: 'complete' }
+  }
+
+  // For general healthcare, no context collection needed
+  if (intent === 'general_healthcare') {
+    return { type: 'answer_general_question' }
+  }
+
+  // For find_provider and find_hospital with sufficient context
+  if (intent === 'find_provider' || intent === 'find_hospital') {
+    if (isContextSufficient(intent, userContext)) {
+      return { type: 'search_providers' }
+    }
+    const missing = getMissingContextFields(intent, userContext)
+    return { type: 'collect_context', missingFields: missing }
+  }
+
+  // For appointment with sufficient context
+  if (intent === 'appointment') {
+    if (isContextSufficient(intent, userContext)) {
+      return { type: 'start_appointment' }
+    }
+    const missing = getMissingContextFields(intent, userContext)
+    return { type: 'collect_context', missingFields: missing }
+  }
+
+  // For insurance
+  if (intent === 'insurance') {
+    if (isContextSufficient(intent, userContext)) {
+      return { type: 'check_insurance' }
+    }
+    const missing = getMissingContextFields(intent, userContext)
+    return { type: 'collect_context', missingFields: missing }
+  }
+
+  // For symptom_navigation and treatment_followup
+  if (isContextSufficient(intent, userContext)) {
+    return { type: 'safety_check' }
+  }
+
+  const missing = getMissingContextFields(intent, userContext)
+  return { type: 'collect_context', missingFields: missing }
+}
+
+export function determineCareLevel(context: UserHealthContext): CareLevel {
+  const safety = containsEmergencyIndicators(context)
+  if (safety.triggered) return 'emergency'
+
+  const severityValue = context.severity?.value
+
+  if (severityValue !== undefined && severityValue >= 7) return 'urgent_care'
+  if (severityValue !== undefined && severityValue >= 4) return 'primary_care'
+  return 'self_care'
+}
+
+export function buildRecommendation(
+  _context: UserHealthContext,
+  careLevel: CareLevel
+): CareRecommendation {
+  const recommendations: Record<CareLevel, Omit<CareRecommendation, 'careLevel'>> = {
+    emergency: {
+      reasoning: 'Based on the severity of your symptoms, you should seek immediate emergency care.',
+      disclaimer: 'This is not a medical diagnosis. If you are experiencing a medical emergency, please call 112 or go to the nearest emergency room immediately.',
+      nextSteps: [
+        { type: 'emergency', label: 'Call Emergency Services', description: 'Dial 112 immediately' },
+        { type: 'find-provider', label: 'Find Nearest Hospital', description: 'Locate an emergency room near you' },
+      ],
+    },
+    urgent_care: {
+      reasoning: 'Your symptoms suggest you should be seen by a healthcare provider today or as soon as possible.',
+      disclaimer: 'This guidance is based on the information you provided. A healthcare professional can provide a proper evaluation.',
+      nextSteps: [
+        { type: 'find-provider', label: 'Find Urgent Care', description: 'Locate an urgent care center or walk-in clinic' },
+        { type: 'learn-more', label: 'Learn About Your Symptoms', description: 'Find reliable health information' },
+      ],
+    },
+    primary_care: {
+      reasoning: 'Based on your symptoms, you should consider visiting a clinic or scheduling an appointment with a primary care provider.',
+      disclaimer: 'This recommendation is based on the information you shared. Please consult a healthcare professional for proper evaluation.',
+      nextSteps: [
+        { type: 'find-provider', label: 'Find a Clinic', description: 'Locate a clinic near you' },
+        { type: 'learn-more', label: 'Self-Care Tips', description: 'Basic care information while you wait' },
+      ],
+    },
+    self_care: {
+      reasoning: 'Your symptoms appear to be manageable. You may want to schedule an appointment with a healthcare provider if symptoms persist.',
+      disclaimer: 'This is general guidance based on the information you provided. A healthcare professional can provide personalized advice.',
+      nextSteps: [
+        { type: 'find-provider', label: 'Find a Doctor', description: 'Schedule an appointment with a primary care provider' },
+        { type: 'learn-more', label: 'Self-Care Tips', description: 'What you can do at home' },
+      ],
+    },
+  }
+
+  const rec = recommendations[careLevel]
+  return { careLevel, ...rec }
+}
