@@ -12,15 +12,9 @@ export function getAIService(): AIService {
   const mode = import.meta.env.VITE_AI_MODE || 'mock'
 
   if (mode === 'openai') {
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY
-    const model = import.meta.env.VITE_OPENAI_MODEL || 'gpt-4o-mini'
-    
-    if (!apiKey) {
-      console.error('VITE_OPENAI_API_KEY is not set. Falling back to mock AI.')
-      serviceInstance = new MockAIService()
-    } else {
-      serviceInstance = new OpenAIAIService(apiKey, model)
-    }
+    // OpenAI service now calls our server-side API
+    // No API key is exposed to the client
+    serviceInstance = new OpenAIAIService()
   } else {
     serviceInstance = new MockAIService()
   }
