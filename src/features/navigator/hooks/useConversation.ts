@@ -9,7 +9,7 @@ import {
 } from '../../../shared/types'
 import { generateId } from '../../../shared/utils'
 import { getAIService } from '../../../services/ai'
-import { containsEmergencyIndicators, determineCareLevel, buildRecommendation } from './useNavigation'
+import { containsEmergencyIndicators, isContextSufficient, determineCareLevel, buildRecommendation } from './useNavigation'
 import { searchProviders } from './useProviderSearch'
 
 type ConversationAction =
@@ -132,8 +132,8 @@ export function useConversation() {
         return
       }
 
-      // If ready for recommendation, determine care level
-      if (result.isReadyForRecommendation) {
+      // If context is sufficient, determine care level
+      if (isContextSufficient(updatedContext)) {
         const careLevel = determineCareLevel(updatedContext)
         const recommendation = buildRecommendation(updatedContext, careLevel)
 

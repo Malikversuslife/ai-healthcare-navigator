@@ -124,16 +124,6 @@ function extractInformation(message: string): ExtractionResult {
   }
 }
 
-function getContextCompleteness(context: UserHealthContext): number {
-  let completeness = 0
-  if (context.concern) completeness += 30
-  if (context.symptoms.length > 0) completeness += 20
-  if (context.duration) completeness += 25
-  if (context.severity !== null && context.severity !== undefined) completeness += 15
-  if (context.location) completeness += 10
-  return completeness
-}
-
 function getMissingInformation(context: UserHealthContext): string[] {
   const missing: string[] = []
   if (!context.concern) missing.push('concern')
@@ -193,29 +183,14 @@ export class MockAIService implements AIService {
       updatedContext.severity = extracted.severity
     }
 
-    // Merge with existing context
+    // Get appropriate follow-up
     const mergedContext: UserHealthContext = {
       ...context,
       ...updatedContext,
     }
-
-    // Check if we have enough information
-    const completeness = getContextCompleteness(mergedContext)
-    const isReady = completeness >= 70
-
-    if (isReady) {
-      const concernText = mergedContext.concern || 'your concern'
-      return {
-        response: `Thank you for sharing that information about your ${concernText}. Based on what you've told me, I can now provide you with a care recommendation and help you find appropriate healthcare providers.`,
-        extractedContext: updatedContext,
-        isReadyForRecommendation: true,
-      }
-    }
-
-    // Need more information - get appropriate follow-up
     const followUp = getFollowUpQuestion(mergedContext)
 
-    // Generate contextual response based on what was extracted
+    // Generate contextual response
     let response = ''
     if (extracted.concern || extracted.symptoms.length > 0 || extracted.duration || extracted.severity !== null) {
       response = `I understand. ${followUp}`
@@ -226,7 +201,6 @@ export class MockAIService implements AIService {
     return {
       response,
       extractedContext: updatedContext,
-      isReadyForRecommendation: false,
       followUpQuestion: followUp,
     }
   }

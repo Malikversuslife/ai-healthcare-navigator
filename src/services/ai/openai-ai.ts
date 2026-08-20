@@ -9,7 +9,6 @@ interface APIResponse {
     duration: string | null
     severity: number | null
   }
-  isReadyForRecommendation: boolean
   followUpQuestion: string | null
 }
 
@@ -17,8 +16,6 @@ export class OpenAIAIService implements AIService {
   private apiEndpoint: string
 
   constructor() {
-    // In development, Vite proxy handles /api routes
-    // In production, this would be your actual API URL
     this.apiEndpoint = '/api/ai/navigate'
   }
 
@@ -67,18 +64,16 @@ export class OpenAIAIService implements AIService {
       return {
         response: data.response,
         extractedContext,
-        isReadyForRecommendation: data.isReadyForRecommendation,
         followUpQuestion: data.followUpQuestion || undefined,
       }
 
     } catch (error) {
       console.error('AI service error:', error)
-      
+
       // Fallback to a safe default response
       return {
         response: 'I apologize, but I encountered an error processing your message. Could you please rephrase or try again?',
         extractedContext: {},
-        isReadyForRecommendation: false,
       }
     }
   }

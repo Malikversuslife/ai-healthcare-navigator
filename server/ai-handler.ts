@@ -16,19 +16,6 @@ Your job is to:
 4. Understand severity if mentioned
 5. Ask one follow-up question at a time to gather missing information
 
-Respond with a JSON object containing:
-{
-  "response": "Your conversational response to the user",
-  "extractedContext": {
-    "concern": "string or null - the main health concern",
-    "symptoms": ["array of symptoms mentioned"],
-    "duration": "sudden, recent, ongoing, or null",
-    "severity": "number 1-10 or null"
-  },
-  "isReadyForRecommendation": true/false,
-  "followUpQuestion": "string or null - only if more info needed"
-}
-
 Duration mapping:
 - "sudden": just started, minutes/hours ago, today
 - "recent": 1-7 days
@@ -39,6 +26,45 @@ Severity mapping:
 - Map words: mild=2-3, moderate=5-6, severe=7-8, extreme=9-10
 
 Be conversational but efficient. Ask only what's missing. Never ask for information already provided.`
+
+const EXTRACTION_SCHEMA = {
+  type: 'object' as const,
+  properties: {
+    response: {
+      type: 'string',
+      description: 'Your conversational response to the user',
+    },
+    extractedContext: {
+      type: 'object',
+      properties: {
+        concern: {
+          type: ['string', 'null'],
+          description: 'The main health concern extracted from the message',
+        },
+        symptoms: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Array of symptoms mentioned',
+        },
+        duration: {
+          type: ['string', 'null'],
+          enum: ['sudden', 'recent', 'ongoing', null],
+          description: 'How long the user has had the symptom',
+        },
+        severity: {
+          type: ['number', 'null'],
+          description: 'Severity rating 1-10 or null',
+        },
+      },
+      required: ['concern', 'symptoms', 'duration', 'severity'],
+    },
+    followUpQuestion: {
+      type: ['string', 'null'],
+      description: 'A follow-up question to gather more information, or null if enough info',
+    },
+  },
+  required: ['response', 'extractedContext', 'followUpQuestion'],
+}
 
 interface NavigateRequest {
   message: string
@@ -59,16 +85,6 @@ function getMissingFields(context: NavigateRequest['context']): string[] {
   if (!context.duration) missing.push('duration')
   if (context.severity === null || context.severity === undefined) missing.push('severity')
   return missing
-}
-
-function getContextCompleteness(context: NavigateRequest['context']): number {
-  let completeness = 0
-  if (context.concern) completeness += 30
-  if (context.symptoms.length > 0) completeness += 20
-  if (context.duration) completeness += 25
-  if (context.severity !== null && context.severity !== undefined) completeness += 15
-  if (context.location) completeness += 10
-  return completeness
 }
 
 function parseBody(req: IncomingMessage): Promise<NavigateRequest> {
@@ -123,7 +139,6 @@ export async function handleNavigate(req: IncomingMessage, res: ServerResponse) 
     }
 
     const missingFields = getMissingFields(context)
-    const completeness = getContextCompleteness(context)
 
     const userMessage = `Current context:
 - Concern: ${context.concern || 'not provided'}
@@ -131,26 +146,32 @@ export async function handleNavigate(req: IncomingMessage, res: ServerResponse) 
 - Duration: ${context.duration || 'not provided'}
 - Severity: ${context.severity !== null ? context.severity : 'not provided'}
 - Missing information: ${missingFields.length > 0 ? missingFields.join(', ') : 'none'}
-- Context completeness: ${completeness}%
 
 User message: "${message}"
 
-Extract information from this message. If context completeness is already 70% or higher, set isReadyForRecommendation to true.`
+Extract information from this message.`
 
     const client = new OpenAI({ apiKey })
-    
-    const completion = await client.chat.completions.create({
+
+    const response = await client.responses.create({
       model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-      messages: [
+      input: [
         { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userMessage }
+        { role: 'user', content: userMessage },
       ],
+      text: {
+        format: {
+          type: 'json_schema',
+          name: 'extraction_result',
+          schema: EXTRACTION_SCHEMA,
+          strict: true,
+        },
+      },
       temperature: 0.3,
-      max_tokens: 500,
-      response_format: { type: 'json_object' }
+      max_output_tokens: 500,
     })
 
-    const content = completion.choices[0]?.message?.content
+    const content = response.output_text
     if (!content) {
       throw new Error('No response from OpenAI')
     }
@@ -163,11 +184,11 @@ Extract information from this message. If context completeness is already 70% or
   } catch (error) {
     console.error('AI API error:', error)
     res.writeHead(500, { 'Content-Type': 'application/json' })
-    res.end(JSON.stringify({ 
+    res.end(JSON.stringify({
       error: 'Failed to process request',
       response: 'I apologize, but I encountered an error. Could you please try again?',
       extractedContext: {},
-      isReadyForRecommendation: false
+      followUpQuestion: null,
     }))
   }
 }

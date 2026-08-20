@@ -1,5 +1,16 @@
 import { UserHealthContext, CareLevel, CareRecommendation } from '../../../shared/types'
 
+export function isContextSufficient(context: UserHealthContext): boolean {
+  // Application determines readiness based on having core information
+  const hasConcern = !!context.concern
+  const hasSymptoms = context.symptoms.length > 0
+  const hasDuration = !!context.duration
+  const hasSeverity = context.severity !== null && context.severity !== undefined
+
+  // Need at least concern + one other piece of information
+  return hasConcern && (hasSymptoms || hasDuration || hasSeverity)
+}
+
 const EMERGENCY_SYMPTOMS = [
   'chest pain',
   'difficulty breathing',
