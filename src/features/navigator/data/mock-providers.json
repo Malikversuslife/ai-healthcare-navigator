@@ -1,152 +1,258 @@
 [
   {
     "id": "p1",
-    "name": "Reddington Hospital",
-    "type": "hospital",
-    "specialty": "Multi-Specialty Hospital",
-    "location": {
-      "city": "Lagos",
-      "area": "Victoria Island",
-      "address": "12 Idowu Martins Street, Victoria Island, Lagos"
-    },
-    "availability": "available",
-    "acceptedInsurance": ["nhis", "leadway", "axa-mansard", "hygeia"],
-    "consultationFee": 25000,
-    "rating": 4.7
-  },
-  {
-    "id": "p2",
-    "name": "Lagoon Hospital",
-    "type": "hospital",
-    "specialty": "Multi-Specialty Hospital",
-    "location": {
-      "city": "Lagos",
-      "area": "Obalende",
-      "address": "4 Breadfruit Street, Lagos Island"
-    },
-    "availability": "available",
-    "acceptedInsurance": ["nhis", "leadway", "clearline"],
-    "consultationFee": 30000,
-    "rating": 4.6
-  },
-  {
-    "id": "p3",
-    "name": "Lovefield Hospital",
+    "name": "Sunrise Clinic Ikeja",
     "type": "clinic",
     "specialty": "General Practice",
     "location": {
       "city": "Lagos",
-      "area": "Lekki",
-      "address": "15 Admiralty Way, Lekki Phase 1"
+      "area": "Ikeja",
+      "address": "15 Awolowo Road, Ikeja, Lagos",
+      "coordinates": { "lat": 6.6000, "lng": 3.3500 }
     },
     "availability": "available",
-    "acceptedInsurance": ["nhis", "hygeia", "clearline"],
+    "acceptedInsurance": ["nhis", "leadway", "hygeia"],
+    "consultationFee": 12000,
+    "rating": 4.3
+  },
+  {
+    "id": "p2",
+    "name": "Clearview Dermatology",
+    "type": "clinic",
+    "specialty": "Dermatology",
+    "location": {
+      "city": "Lagos",
+      "area": "Lekki",
+      "address": "22 Admiralty Way, Lekki Phase 1, Lagos",
+      "coordinates": { "lat": 6.4470, "lng": 3.4550 }
+    },
+    "availability": "available",
+    "acceptedInsurance": ["nhis", "axa-mansard", "hygeia", "clearline"],
+    "consultationFee": 25000,
+    "rating": 4.6
+  },
+  {
+    "id": "p3",
+    "name": "HeartCare Cardiology Centre",
+    "type": "clinic",
+    "specialty": "Cardiology",
+    "location": {
+      "city": "Lagos",
+      "area": "Victoria Island",
+      "address": "8 Adeola Odeku Street, Victoria Island, Lagos",
+      "coordinates": { "lat": 6.4281, "lng": 3.4219 }
+    },
+    "availability": "limited",
+    "acceptedInsurance": ["nhis", "leadway", "axa-mansard"],
+    "consultationFee": 35000,
+    "rating": 4.7
+  },
+  {
+    "id": "p4",
+    "name": "Family First Surulere",
+    "type": "clinic",
+    "specialty": "Family Medicine",
+    "location": {
+      "city": "Lagos",
+      "area": "Surulere",
+      "address": "45 Bode Thomas Street, Surulere, Lagos",
+      "coordinates": { "lat": 6.5260, "lng": 3.3590 }
+    },
+    "availability": "available",
+    "acceptedInsurance": ["nhis", "hygeia"],
+    "consultationFee": 10000,
+    "rating": 4.2
+  },
+  {
+    "id": "p5",
+    "name": "Greenleaf Physiotherapy",
+    "type": "clinic",
+    "specialty": "Physiotherapy",
+    "location": {
+      "city": "Lagos",
+      "area": "Yaba",
+      "address": "12 Herbert Macaulay Way, Yaba, Lagos",
+      "coordinates": { "lat": 6.5160, "lng": 3.3820 }
+    },
+    "availability": "available",
+    "acceptedInsurance": ["nhis", "leadway"],
     "consultationFee": 15000,
     "rating": 4.4
   },
   {
-    "id": "p4",
+    "id": "p6",
+    "name": "Lagos Island General Hospital",
+    "type": "hospital",
+    "specialty": "Multi-Specialty Hospital",
+    "location": {
+      "city": "Lagos",
+      "area": "Lagos Island",
+      "address": "57 Campbell Street, Lagos Island, Lagos",
+      "coordinates": { "lat": 6.4540, "lng": 3.3950 }
+    },
+    "availability": "available",
+    "acceptedInsurance": ["nhis", "leadway", "axa-mansard", "hygeia"],
+    "consultationFee": 28000,
+    "rating": 4.5
+  },
+  {
+    "id": "p7",
+    "name": "Bright Eyes Optometry",
+    "type": "clinic",
+    "specialty": "Optometry",
+    "location": {
+      "city": "Lagos",
+      "area": "Ikeja",
+      "address": "7 Opebi Road, Ikeja, Lagos",
+      "coordinates": { "lat": 6.6050, "lng": 3.3480 }
+    },
+    "availability": "available",
+    "acceptedInsurance": ["nhis", "clearline"],
+    "consultationFee": 10000,
+    "rating": 4.1
+  },
+  {
+    "id": "p8",
+    "name": "Wuse Medical Centre",
+    "type": "clinic",
+    "specialty": "General Practice",
+    "location": {
+      "city": "Abuja",
+      "area": "Wuse",
+      "address": "23 Ahmadu Bello Way, Wuse II, Abuja",
+      "coordinates": { "lat": 9.0570, "lng": 7.4890 }
+    },
+    "availability": "available",
+    "acceptedInsurance": ["nhis", "leadway", "axa-mansard"],
+    "consultationFee": 18000,
+    "rating": 4.4
+  },
+  {
+    "id": "p9",
+    "name": "Garki Dental Clinic",
+    "type": "clinic",
+    "specialty": "Dentistry",
+    "location": {
+      "city": "Abuja",
+      "area": "Garki",
+      "address": "14 Araromo Street, Garki Area 11, Abuja",
+      "coordinates": { "lat": 9.0600, "lng": 7.4920 }
+    },
+    "availability": "limited",
+    "acceptedInsurance": ["nhis", "hygeia"],
+    "consultationFee": 15000,
+    "rating": 4.3
+  },
+  {
+    "id": "p10",
+    "name": "Maitama Children's Clinic",
+    "type": "clinic",
+    "specialty": "Pediatrics",
+    "location": {
+      "city": "Abuja",
+      "area": "Maitama",
+      "address": "5 Aguiyi-Ironsi Street, Maitama, Abuja",
+      "coordinates": { "lat": 9.0800, "lng": 7.4900 }
+    },
+    "availability": "available",
+    "acceptedInsurance": ["nhis", "leadway", "axa-mansard", "hygeia"],
+    "consultationFee": 20000,
+    "rating": 4.6
+  },
+  {
+    "id": "p11",
     "name": "National Hospital Abuja",
     "type": "hospital",
     "specialty": "Multi-Specialty Hospital",
     "location": {
       "city": "Abuja",
       "area": "Garki",
-      "address": "Plot 132, Central District, Abuja"
+      "address": "Plot 132, Central District, Abuja",
+      "coordinates": { "lat": 9.0580, "lng": 7.4910 }
     },
     "availability": "limited",
     "acceptedInsurance": ["nhis", "leadway", "axa-mansard"],
-    "consultationFee": 20000,
+    "consultationFee": 25000,
     "rating": 4.5
   },
   {
-    "id": "p5",
-    "name": "Cedarcrest Hospital",
-    "type": "hospital",
-    "specialty": "Multi-Specialty Hospital",
-    "location": {
-      "city": "Abuja",
-      "area": "Apo",
-      "address": "11 Ebitu Ukiwe Street, Apo District"
-    },
-    "availability": "available",
-    "acceptedInsurance": ["nhis", "leadway", "hygeia", "axa-mansard"],
-    "consultationFee": 25000,
-    "rating": 4.6
-  },
-  {
-    "id": "p6",
-    "name": "St. Nicholas Hospital",
-    "type": "hospital",
-    "specialty": "Multi-Specialty Hospital",
-    "location": {
-      "city": "Lagos",
-      "area": "Lagos Island",
-      "address": "57 Campbell Street, Lagos Island"
-    },
-    "availability": "available",
-    "acceptedInsurance": ["nhis", "leadway", "clearline"],
-    "consultationFee": 28000,
-    "rating": 4.7
-  },
-  {
-    "id": "p7",
-    "name": "Medicaid Hospital",
-    "type": "clinic",
-    "specialty": "General Practice",
-    "location": {
-      "city": "Lagos",
-      "area": "Ikeja",
-      "address": "25 Awolowo Road, Ikeja"
-    },
-    "availability": "available",
-    "acceptedInsurance": ["nhis", "hygeia"],
-    "consultationFee": 12000,
-    "rating": 4.3
-  },
-  {
-    "id": "p8",
-    "name": "Eko Hospital",
-    "type": "hospital",
-    "specialty": "Multi-Specialty Hospital",
-    "location": {
-      "city": "Lagos",
-      "area": "Surulere",
-      "address": "31 Bode Thomas Street, Surulere"
-    },
-    "availability": "limited",
-    "acceptedInsurance": ["nhis", "leadway", "axa-mansard", "hygeia"],
-    "consultationFee": 22000,
-    "rating": 4.4
-  },
-  {
-    "id": "p9",
-    "name": "UITH Telemedicine",
-    "type": "telehealth",
-    "specialty": "General Consultation",
-    "location": {
-      "city": "Ilorin",
-      "area": "Tanke",
-      "address": "Virtual Consultation"
-    },
-    "availability": "available",
-    "acceptedInsurance": ["nhis"],
-    "consultationFee": 8000,
-    "rating": 4.2
-  },
-  {
-    "id": "p10",
-    "name": "LifeBridge Clinic",
+    "id": "p12",
+    "name": "Riverside Family Clinic",
     "type": "clinic",
     "specialty": "Family Medicine",
     "location": {
       "city": "Port Harcourt",
       "area": "GRA",
-      "address": "14 Forces Avenue, GRA, Port Harcourt"
+      "address": "14 Forces Avenue, GRA, Port Harcourt",
+      "coordinates": { "lat": 4.7870, "lng": 7.0260 }
     },
     "availability": "available",
     "acceptedInsurance": ["nhis", "leadway", "hygeia"],
-    "consultationFee": 18000,
+    "consultationFee": 15000,
+    "rating": 4.3
+  },
+  {
+    "id": "p13",
+    "name": "Ibadan Heart Centre",
+    "type": "clinic",
+    "specialty": "Cardiology",
+    "location": {
+      "city": "Ibadan",
+      "area": "Bodija",
+      "address": "8 Secretariat Road, Bodija, Ibadan",
+      "coordinates": { "lat": 7.4430, "lng": 3.8980 }
+    },
+    "availability": "available",
+    "acceptedInsurance": ["nhis", "axa-mansard"],
+    "consultationFee": 20000,
+    "rating": 4.4
+  },
+  {
+    "id": "p14",
+    "name": "Ilorin General Practice Clinic",
+    "type": "clinic",
+    "specialty": "General Practice",
+    "location": {
+      "city": "Ilorin",
+      "area": "Tanke",
+      "address": "30 University Road, Tanke, Ilorin",
+      "coordinates": { "lat": 8.4960, "lng": 4.5420 }
+    },
+    "availability": "available",
+    "acceptedInsurance": ["nhis"],
+    "consultationFee": 8000,
+    "rating": 4.0
+  },
+  {
+    "id": "p15",
+    "name": "TeleHealth Nigeria",
+    "type": "telehealth",
+    "specialty": "General Consultation",
+    "location": {
+      "city": "Lagos",
+      "area": "Virtual",
+      "address": "Virtual Consultation",
+      "coordinates": { "lat": 6.5244, "lng": 3.3792 }
+    },
+    "availability": "available",
+    "acceptedInsurance": ["nhis", "leadway"],
+    "consultationFee": 5000,
+    "rating": 4.2
+  },
+  {
+    "id": "p16",
+    "name": "Vanguard Orthopaedics",
+    "type": "clinic",
+    "specialty": "Orthopedics",
+    "location": {
+      "city": "Lagos",
+      "area": "Lekki",
+      "address": "Plot 14, Admiralty Way, Lekki Phase 1, Lagos",
+      "coordinates": { "lat": 6.4460, "lng": 3.4560 }
+    },
+    "availability": "limited",
+    "acceptedInsurance": ["nhis", "leadway", "axa-mansard", "clearline"],
+    "consultationFee": 30000,
     "rating": 4.5
   }
 ]

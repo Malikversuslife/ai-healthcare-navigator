@@ -76,7 +76,12 @@ function ConversationView() {
     setLocation(location)
   }
 
-  const showInput = state.currentStep !== 'recommendation' && 
+  const handleSelectProvider = (providerId: string) => {
+    // Provider selected — for now just log. Booking not yet implemented.
+    void providerId
+  }
+
+  const showInput = state.currentStep !== 'recommendation' &&
                     state.currentStep !== 'provider-search' &&
                     state.currentStep !== 'location-prompt'
 
@@ -91,8 +96,8 @@ function ConversationView() {
           {/* Messages Area */}
           <div className="h-[500px] md:h-[600px] overflow-y-auto p-4 md:p-6">
             {state.messages.map((message: Message) => (
-              <MessageBubble 
-                key={message.id} 
+              <MessageBubble
+                key={message.id}
                 message={message}
                 onQuickReply={handleQuickReply}
               />
@@ -107,7 +112,7 @@ function ConversationView() {
             )}
 
             {/* Location Prompt */}
-            {state.currentStep === 'provider-search' && state.providers.length === 0 && !state.userContext.location && (
+            {state.currentStep === 'provider-search' && state.providerMatches.length === 0 && !state.userContext.location && (
               <LocationPrompt onLocationSelect={handleLocationSelect} />
             )}
 
@@ -127,15 +132,15 @@ function ConversationView() {
             )}
 
             {/* Provider List */}
-            {state.providers.length > 0 && (
+            {state.providerMatches.length > 0 && (
               <ProviderList
-                providers={state.providers}
-                selectedInsurance={state.selectedInsurance}
+                matches={state.providerMatches}
+                onSelectProvider={handleSelectProvider}
               />
             )}
 
             {/* Insurance Selection */}
-            {state.currentStep === 'provider-search' && state.providers.length > 0 && (
+            {state.currentStep === 'provider-search' && state.providerMatches.length > 0 && (
               <div className="mt-6 bg-ink-50 rounded-xl p-4 border border-ink-100">
                 <h4 className="font-medium text-ink-900 mb-3">Select your insurance (optional)</h4>
                 <div className="flex flex-wrap gap-2">

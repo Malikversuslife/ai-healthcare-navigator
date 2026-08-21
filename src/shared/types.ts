@@ -124,12 +124,39 @@ export interface Provider {
     address: string
     coordinates?: { lat: number; lng: number }
   }
-  distance?: number
   availability: 'available' | 'limited' | 'unavailable'
   nextAvailable?: string
   acceptedInsurance: string[]
   consultationFee: number
   rating: number
+}
+
+export type ProviderMatchReason =
+  | 'specialty_match'
+  | 'provider_type_match'
+  | 'location_match'
+  | 'insurance_match'
+  | 'available'
+  | 'lower_cost'
+  | 'high_rating'
+  | 'nearby'
+
+export interface ProviderMatch {
+  provider: Provider
+  score: number
+  matchReasons: ProviderMatchReason[]
+  insuranceStatus: 'accepted' | 'not_accepted' | 'unknown'
+  distanceKm: number | null
+}
+
+export interface ProviderSearchContext {
+  pathway?: CarePathway
+  specialty?: string
+  providerType?: Provider['type']
+  city?: string
+  area?: string
+  insurance?: string
+  userCoordinates?: { lat: number; lng: number }
 }
 
 export interface InsurancePlan {
@@ -186,7 +213,7 @@ export interface Message {
   metadata?: {
     extractedContext?: Partial<UserHealthContext>
     recommendation?: CareRecommendation
-    providers?: Provider[]
+    providerMatches?: ProviderMatch[]
   }
 }
 
@@ -206,7 +233,7 @@ export interface ConversationState {
   currentStep: ConversationStep
   userContext: UserHealthContext
   recommendation: CareRecommendation | null
-  providers: Provider[]
+  providerMatches: ProviderMatch[]
   selectedInsurance: string | null
   isLoading: boolean
   progress: ConversationProgress

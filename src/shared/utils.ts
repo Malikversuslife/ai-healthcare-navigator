@@ -16,3 +16,5 @@ export function formatCurrency(amount: number): string {
     minimumFractionDigits: 0,
   }).format(amount)
 }
+
+export { calculateDistance } from './utils/distance'

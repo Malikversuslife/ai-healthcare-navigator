@@ -7,3 +7,5 @@ export {
   buildPathwayRecommendation,
   buildEmergencyRecommendation,
 } from './navigation'
+export { rankProviders } from './provider-matching'
+export { normalizeSpecialty, isSpecialtyMatch } from './specialty-normalization'

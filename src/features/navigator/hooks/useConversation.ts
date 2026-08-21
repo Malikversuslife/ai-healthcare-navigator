@@ -4,7 +4,8 @@ import {
   ConversationStep,
   Message,
   UserHealthContext,
-  Provider,
+  ProviderMatch,
+  ProviderSearchContext,
   ConversationProgress,
   NavigationIntent,
   NavigationState,
@@ -13,6 +14,7 @@ import {
 import { generateId } from '../../../shared/utils'
 import { getAIService } from '../../../services/ai'
 import { evaluateNavigation, evaluateEmergencySafety, buildEmergencyRecommendation, evaluateCarePathway, buildPathwayRecommendation } from '../engine'
+import { normalizeSpecialty } from '../engine/specialty-normalization'
 import { searchProviders } from './useProviderSearch'
 
 type ConversationAction =
@@ -21,7 +23,7 @@ type ConversationAction =
   | { type: 'SET_STEP'; step: ConversationStep }
   | { type: 'UPDATE_CONTEXT'; context: Partial<UserHealthContext> }
   | { type: 'SET_RECOMMENDATION'; recommendation: NonNullable<ConversationState['recommendation']> }
-  | { type: 'SET_PROVIDERS'; providers: Provider[] }
+  | { type: 'SET_PROVIDER_MATCHES'; matches: ProviderMatch[] }
   | { type: 'SET_LOCATION'; location: string }
   | { type: 'SET_INSURANCE'; insuranceId: string }
   | { type: 'UPDATE_PROGRESS'; progress: Partial<ConversationProgress> }
@@ -46,7 +48,7 @@ const initialState: ConversationState = {
     duration: '',
   },
   recommendation: null,
-  providers: [],
+  providerMatches: [],
   selectedInsurance: null,
   isLoading: false,
   progress: initialProgress,
@@ -85,8 +87,8 @@ function conversationReducer(
     }
     case 'SET_RECOMMENDATION':
       return { ...state, recommendation: action.recommendation }
-    case 'SET_PROVIDERS':
-      return { ...state, providers: action.providers }
+    case 'SET_PROVIDER_MATCHES':
+      return { ...state, providerMatches: action.matches }
     case 'SET_LOCATION':
       return { ...state, userContext: { ...state.userContext, location: action.location } }
     case 'SET_INSURANCE':
@@ -160,6 +162,17 @@ export function useConversation() {
     }
     dispatch({ type: 'ADD_MESSAGE', message })
   }, [])
+
+  const runProviderSearch = useCallback((overrides?: Partial<ProviderSearchContext>) => {
+    const ctx: ProviderSearchContext = {
+      city: overrides?.city ?? state.userContext.location,
+      specialty: overrides?.specialty ?? (state.userContext.specialty ? normalizeSpecialty(state.userContext.specialty) : undefined),
+      insurance: overrides?.insurance ?? state.selectedInsurance ?? undefined,
+    }
+
+    const matches = searchProviders(ctx)
+    dispatch({ type: 'SET_PROVIDER_MATCHES', matches })
+  }, [state.userContext.location, state.userContext.specialty, state.selectedInsurance])
 
   const sendMessage = useCallback(async (content: string) => {
     addMessage('user', content)
@@ -277,6 +290,10 @@ export function useConversation() {
           dispatch({ type: 'SET_NAVIGATION_STATE', state: 'provider_search' })
           dispatch({ type: 'SET_STEP', step: 'provider-search' })
 
+          // Run provider search with normalized specialty
+          const specialty = updatedContext.specialty ? normalizeSpecialty(updatedContext.specialty) : undefined
+          runProviderSearch({ specialty })
+
           addMessage('assistant', result.response, {
             extractedContext: result.extractedContext,
           })
@@ -325,36 +342,25 @@ export function useConversation() {
     } finally {
       dispatch({ type: 'SET_LOADING', isLoading: false })
     }
-  }, [state.userContext, state.navigationState, state.recommendation, addMessage])
+  }, [state.userContext, state.navigationState, state.recommendation, state.selectedInsurance, addMessage, runProviderSearch])
 
   const findProviders = useCallback((location?: string) => {
-    const filter = {
-      location: location || state.userContext.location,
-      insurance: state.selectedInsurance || undefined,
-    }
-
-    const providers = searchProviders(filter)
-    dispatch({ type: 'SET_PROVIDERS', providers })
+    const city = location || state.userContext.location
+    runProviderSearch({ city })
     dispatch({ type: 'SET_STEP', step: 'provider-search' })
-  }, [state.userContext.location, state.selectedInsurance])
+  }, [state.userContext.location, runProviderSearch])
 
   const selectInsurance = useCallback((insuranceId: string) => {
     dispatch({ type: 'SET_INSURANCE', insuranceId: insuranceId })
 
-    if (state.providers.length > 0) {
-      const filtered = state.providers.filter((p: Provider) =>
-        p.acceptedInsurance.includes(insuranceId)
-      )
-      if (filtered.length > 0) {
-        dispatch({ type: 'SET_PROVIDERS', providers: filtered })
-      }
-    }
-  }, [state.providers])
+    // Re-run search with updated insurance
+    runProviderSearch({ insurance: insuranceId })
+  }, [runProviderSearch])
 
   const setLocation = useCallback((location: string) => {
     dispatch({ type: 'SET_LOCATION', location })
-    findProviders(location)
-  }, [findProviders])
+    runProviderSearch({ city: location })
+  }, [runProviderSearch])
 
   const startConversation = useCallback(() => {
     const greeting: Message = {
