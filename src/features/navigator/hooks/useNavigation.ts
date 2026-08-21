@@ -1,5 +1,5 @@
-import { UserHealthContext, CareLevel, CareRecommendation, NavigationIntent, NavigationState, NavigationAction, NavigationContext, SafetyResult } from '../../../shared/types'
-import { evaluateEmergencySafety as engineEvaluateEmergencySafety, isContextSufficient as engineIsContextSufficient, getMissingContextFields as engineGetMissingContextFields, evaluateNavigation as engineEvaluateNavigation, determineCareLevel as engineDetermineCareLevel, buildRecommendation as engineBuildRecommendation } from '../engine'
+import { UserHealthContext, NavigationIntent, NavigationState, NavigationAction, NavigationContext, SafetyResult, CareNavigationContext, CarePathwayResult } from '../../../shared/types'
+import { evaluateEmergencySafety as engineEvaluateEmergencySafety, isContextSufficient as engineIsContextSufficient, getMissingContextFields as engineGetMissingContextFields, evaluateNavigation as engineEvaluateNavigation, evaluateCarePathway as engineEvaluateCarePathway } from '../engine'
 
 export function evaluateEmergencySafety(context: UserHealthContext): SafetyResult {
   return engineEvaluateEmergencySafety(context)
@@ -17,12 +17,8 @@ export function evaluateNavigation(navContext: NavigationContext): NavigationAct
   return engineEvaluateNavigation(navContext)
 }
 
-export function determineCareLevel(context: UserHealthContext): CareLevel {
-  return engineDetermineCareLevel(context)
+export function evaluateCarePathway(context: CareNavigationContext): CarePathwayResult {
+  return engineEvaluateCarePathway(context)
 }
 
-export function buildRecommendation(context: UserHealthContext, careLevel: CareLevel): CareRecommendation {
-  return engineBuildRecommendation(context, careLevel)
-}
-
-export type { NavigationIntent, NavigationState, NavigationAction, NavigationContext, SafetyResult }
+export type { NavigationIntent, NavigationState, NavigationAction, NavigationContext, SafetyResult, CareNavigationContext, CarePathwayResult }

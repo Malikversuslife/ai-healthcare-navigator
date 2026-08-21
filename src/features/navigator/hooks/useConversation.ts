@@ -12,7 +12,7 @@ import {
 } from '../../../shared/types'
 import { generateId } from '../../../shared/utils'
 import { getAIService } from '../../../services/ai'
-import { evaluateNavigation, evaluateEmergencySafety, buildEmergencyRecommendation, determineCareLevel, buildRecommendation } from '../engine'
+import { evaluateNavigation, evaluateEmergencySafety, buildEmergencyRecommendation, evaluateCarePathway, buildPathwayRecommendation } from '../engine'
 import { searchProviders } from './useProviderSearch'
 
 type ConversationAction =
@@ -187,7 +187,7 @@ export function useConversation() {
 
       const updatedContext = { ...state.userContext, ...result.extractedContext }
 
-      // Safety evaluation runs FIRST — before any navigation logic
+      // Stage 4B: Safety evaluation runs FIRST — before any navigation logic
       const safetyResult = evaluateEmergencySafety(updatedContext)
       dispatch({ type: 'SET_SAFETY_RESULT', result: safetyResult })
 
@@ -217,8 +217,7 @@ export function useConversation() {
       // Handle each action type
       switch (navAction.type) {
         case 'emergency': {
-          // This should not happen if safety evaluation above is correct,
-          // but handle it defensively
+          // Defensive — should not happen if safety evaluation above is correct
           dispatch({ type: 'SET_NAVIGATION_STATE', state: 'emergency' })
           dispatch({ type: 'SET_STEP', step: 'emergency' })
 
@@ -247,8 +246,12 @@ export function useConversation() {
         case 'safety_check': {
           dispatch({ type: 'SET_NAVIGATION_STATE', state: 'safety_check' })
 
-          const careLevel = determineCareLevel(updatedContext)
-          const recommendation = buildRecommendation(updatedContext, careLevel)
+          // Stage 4C: Evaluate care pathway (only runs after Stage 4B returns no emergency)
+          const pathwayResult = evaluateCarePathway({
+            intent,
+            healthContext: updatedContext,
+          })
+          const recommendation = buildPathwayRecommendation(pathwayResult)
 
           dispatch({ type: 'SET_NAVIGATION_STATE', state: 'recommendation' })
           dispatch({ type: 'SET_RECOMMENDATION', recommendation })

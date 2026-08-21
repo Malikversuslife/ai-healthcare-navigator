@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { evaluateNavigation, determineCareLevel, buildRecommendation } from '../navigation'
-import { UserHealthContext, NavigationContext } from '../../../../shared/types'
+import { evaluateNavigation, buildPathwayRecommendation, buildEmergencyRecommendation } from '../navigation'
+import { evaluateCarePathway } from '../pathway'
+import { NavigationContext, CareNavigationContext } from '../../../../shared/types'
 
 describe('evaluateNavigation', () => {
   describe('emergency detection via safety boundary', () => {
@@ -198,92 +199,281 @@ describe('evaluateNavigation', () => {
   })
 })
 
-describe('determineCareLevel', () => {
-  it('returns primary_care as placeholder for all contexts', () => {
-    // Stage 4A: care-level determination is intentionally incomplete.
-    // All paths return primary_care as a safe placeholder.
-    const contexts: UserHealthContext[] = [
-      {
-        concern: 'headache',
-        symptoms: ['headache'],
-        duration: 'since yesterday',
-      },
-      {
-        concern: 'pain',
-        symptoms: ['pain'],
-        duration: '1 hour',
-        severity: { value: 7 },
-      },
-      {
-        concern: 'pain',
-        symptoms: ['pain'],
-        duration: '1 day',
-        severity: { value: 4 },
-      },
-      {
-        concern: 'mild cold',
-        symptoms: ['runny nose'],
-        duration: '3 days',
-      },
-    ]
+describe('evaluateCarePathway', () => {
+  describe('primary_care', () => {
+    it('returns primary_care for recurring headaches with sufficient context', () => {
+      const context: CareNavigationContext = {
+        intent: 'symptom_navigation',
+        healthContext: {
+          concern: 'headache',
+          symptoms: ['headache'],
+          duration: 'several days',
+        },
+      }
+      const result = evaluateCarePathway(context)
+      expect(result.pathway).toBe('primary_care')
+      expect(result.escalationFactors).toHaveLength(0)
+    })
 
-    for (const context of contexts) {
-      expect(determineCareLevel(context)).toBe('primary_care')
-    }
+    it('returns primary_care for symptom navigation without escalation', () => {
+      const context: CareNavigationContext = {
+        intent: 'symptom_navigation',
+        healthContext: {
+          concern: 'stomach pain',
+          symptoms: ['nausea'],
+          duration: '2 days',
+        },
+      }
+      const result = evaluateCarePathway(context)
+      expect(result.pathway).toBe('primary_care')
+    })
   })
 
-  it('severity 7 does NOT independently produce urgent_care', () => {
-    const context: UserHealthContext = {
-      concern: 'pain',
-      symptoms: ['pain'],
-      duration: '1 hour',
-      severity: { value: 7 },
-    }
-    expect(determineCareLevel(context)).not.toBe('urgent_care')
+  describe('provider_or_specialist', () => {
+    it('returns provider_or_specialist for explicit provider intent', () => {
+      const context: CareNavigationContext = {
+        intent: 'find_provider',
+        healthContext: {
+          concern: '',
+          symptoms: [],
+          duration: '',
+          specialty: 'dermatologist',
+        },
+      }
+      const result = evaluateCarePathway(context)
+      expect(result.pathway).toBe('provider_or_specialist')
+    })
+
+    it('returns provider_or_specialist for hospital search', () => {
+      const context: CareNavigationContext = {
+        intent: 'find_hospital',
+        healthContext: {
+          concern: '',
+          symptoms: [],
+          duration: '',
+          location: 'Lagos',
+        },
+      }
+      const result = evaluateCarePathway(context)
+      expect(result.pathway).toBe('provider_or_specialist')
+    })
   })
 
-  it('severity 4 does NOT independently produce primary_care from rules', () => {
-    // It returns primary_care, but only because ALL contexts return
-    // primary_care as a placeholder — not because of a severity rule.
-    const context: UserHealthContext = {
-      concern: 'pain',
-      symptoms: ['pain'],
-      duration: '1 day',
-      severity: { value: 4 },
-    }
-    expect(determineCareLevel(context)).toBe('primary_care')
+  describe('informational_navigation', () => {
+    it('returns informational_navigation for general healthcare question', () => {
+      const context: CareNavigationContext = {
+        intent: 'general_healthcare',
+        healthContext: {
+          concern: '',
+          symptoms: [],
+          duration: '',
+        },
+      }
+      const result = evaluateCarePathway(context)
+      expect(result.pathway).toBe('informational_navigation')
+    })
   })
 
-  it('low/no severity does NOT automatically produce self_care', () => {
-    const context: UserHealthContext = {
-      concern: 'mild headache',
-      symptoms: ['headache'],
-      duration: 'a few hours',
-    }
-    expect(determineCareLevel(context)).not.toBe('self_care')
+  describe('prompt_medical_review', () => {
+    it('returns prompt_medical_review for rapidly worsening symptoms', () => {
+      const context: CareNavigationContext = {
+        intent: 'symptom_navigation',
+        healthContext: {
+          concern: 'pain',
+          symptoms: ['pain'],
+          duration: '3 days',
+          symptomTrend: 'rapidly_worsening',
+        },
+      }
+      const result = evaluateCarePathway(context)
+      expect(result.pathway).toBe('prompt_medical_review')
+      expect(result.escalationFactors).toContain('rapidly_worsening')
+    })
+
+    it('returns prompt_medical_review for significant functional impact', () => {
+      const context: CareNavigationContext = {
+        intent: 'symptom_navigation',
+        healthContext: {
+          concern: 'back pain',
+          symptoms: ['pain'],
+          duration: '1 week',
+          functionalImpact: { level: 'significant' },
+        },
+      }
+      const result = evaluateCarePathway(context)
+      expect(result.pathway).toBe('prompt_medical_review')
+      expect(result.escalationFactors).toContain('significant_functional_impact')
+    })
+
+    it('returns prompt_medical_review for can\'t go to work (via functionalImpact)', () => {
+      const context: CareNavigationContext = {
+        intent: 'symptom_navigation',
+        healthContext: {
+          concern: 'migraine',
+          symptoms: ['headache', 'nausea'],
+          duration: '3 days',
+          functionalImpact: { level: 'significant', description: 'User reported inability to go to work' },
+        },
+      }
+      const result = evaluateCarePathway(context)
+      expect(result.pathway).toBe('prompt_medical_review')
+      expect(result.escalationFactors).toContain('significant_functional_impact')
+    })
+  })
+
+  describe('severity protection', () => {
+    it('severity value = 8 does NOT independently determine pathway', () => {
+      const context: CareNavigationContext = {
+        intent: 'symptom_navigation',
+        healthContext: {
+          concern: 'pain',
+          symptoms: ['pain'],
+          duration: '1 day',
+          severity: { value: 8 },
+        },
+      }
+      const result = evaluateCarePathway(context)
+      expect(result.pathway).not.toBe('prompt_medical_review')
+      expect(result.pathway).toBe('primary_care')
+    })
+  })
+
+  describe('duration protection', () => {
+    it('duration two weeks does NOT independently determine escalation', () => {
+      const context: CareNavigationContext = {
+        intent: 'symptom_navigation',
+        healthContext: {
+          concern: 'cough',
+          symptoms: ['cough'],
+          duration: 'two weeks',
+        },
+      }
+      const result = evaluateCarePathway(context)
+      expect(result.pathway).not.toBe('prompt_medical_review')
+      expect(result.pathway).toBe('primary_care')
+    })
+  })
+
+  describe('emergency precedence', () => {
+    it('emergency pathway is handled before Stage 4C (integration test)', () => {
+      // This tests the full flow: safety check → pathway
+      // If safety triggers, Stage 4C should never run
+      const context: NavigationContext = {
+        intent: 'symptom_navigation',
+        state: 'collecting_context',
+        userContext: {
+          concern: 'chest pain',
+          symptoms: ['struggling to breathe'],
+          duration: '10 minutes',
+        },
+      }
+      const action = evaluateNavigation(context)
+      // Safety should catch this before pathway evaluation
+      expect(action.type).toBe('emergency')
+    })
+  })
+
+  describe('provider + emergency', () => {
+    it('provider intent with emergency symptoms goes to emergency', () => {
+      const context: NavigationContext = {
+        intent: 'find_provider',
+        state: 'collecting_context',
+        userContext: {
+          concern: 'dermatologist',
+          symptoms: ['struggling to breathe'],
+          duration: '5 minutes',
+          specialty: 'dermatologist',
+          location: 'Lagos',
+        },
+      }
+      const action = evaluateNavigation(context)
+      // Safety check runs first — emergency takes precedence
+      expect(action.type).toBe('emergency')
+    })
+  })
+
+  describe('general healthcare without symptoms', () => {
+    it('informational navigation does not require symptom intake', () => {
+      const context: CareNavigationContext = {
+        intent: 'general_healthcare',
+        healthContext: {
+          concern: '',
+          symptoms: [],
+          duration: '',
+        },
+      }
+      const result = evaluateCarePathway(context)
+      expect(result.pathway).toBe('informational_navigation')
+    })
   })
 })
 
-describe('buildRecommendation', () => {
-  it('builds emergency recommendation', () => {
-    const context: UserHealthContext = {
-      concern: 'chest pain',
-      symptoms: ['chest pain'],
-      duration: '30 minutes',
-    }
-    const rec = buildRecommendation(context, 'emergency')
-    expect(rec.careLevel).toBe('emergency')
-    expect(rec.nextSteps.some(s => s.type === 'emergency')).toBe(true)
+describe('buildPathwayRecommendation', () => {
+  it('builds primary_care recommendation', () => {
+    const result = evaluateCarePathway({
+      intent: 'symptom_navigation',
+      healthContext: {
+        concern: 'headache',
+        symptoms: ['headache'],
+        duration: '3 days',
+      },
+    })
+    const rec = buildPathwayRecommendation(result)
+    expect(rec.careLevel).toBe('primary_care')
+    expect(rec.reasoning).toContain('primary care')
+    expect(rec.disclaimer).toBeTruthy()
   })
 
-  it('builds primary_care recommendation', () => {
-    const context: UserHealthContext = {
-      concern: 'mild headache',
-      symptoms: ['headache'],
-      duration: 'a few hours',
-    }
-    const rec = buildRecommendation(context, 'primary_care')
+  it('builds prompt_medical_review recommendation', () => {
+    const result = evaluateCarePathway({
+      intent: 'symptom_navigation',
+      healthContext: {
+        concern: 'pain',
+        symptoms: ['pain'],
+        duration: '3 days',
+        symptomTrend: 'rapidly_worsening',
+      },
+    })
+    const rec = buildPathwayRecommendation(result)
+    expect(rec.careLevel).toBe('urgent_care')
+    expect(rec.reasoning).toContain('medical assessment')
+  })
+
+  it('builds provider_or_specialist recommendation', () => {
+    const result = evaluateCarePathway({
+      intent: 'find_provider',
+      healthContext: {
+        concern: '',
+        symptoms: [],
+        duration: '',
+        specialty: 'dermatologist',
+      },
+    })
+    const rec = buildPathwayRecommendation(result)
     expect(rec.careLevel).toBe('primary_care')
-    expect(rec.disclaimer).toBeTruthy()
+    expect(rec.reasoning).toContain('healthcare professional')
+  })
+
+  it('builds informational_navigation recommendation', () => {
+    const result = evaluateCarePathway({
+      intent: 'general_healthcare',
+      healthContext: {
+        concern: '',
+        symptoms: [],
+        duration: '',
+      },
+    })
+    const rec = buildPathwayRecommendation(result)
+    expect(rec.careLevel).toBe('primary_care')
+    expect(rec.reasoning).toContain('information')
+  })
+})
+
+describe('buildEmergencyRecommendation', () => {
+  it('builds emergency recommendation', () => {
+    const rec = buildEmergencyRecommendation()
+    expect(rec.careLevel).toBe('emergency')
+    expect(rec.nextSteps.some(s => s.type === 'emergency')).toBe(true)
+    expect(rec.disclaimer).toContain('not determine or rule out')
   })
 })

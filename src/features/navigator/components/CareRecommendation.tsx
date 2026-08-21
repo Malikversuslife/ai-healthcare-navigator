@@ -1,5 +1,4 @@
 import { CareRecommendation } from '../../../shared/types'
-import { getCareLevelInfo } from '../data/care-levels'
 
 interface CareRecommendationProps {
   recommendation: CareRecommendation
@@ -7,32 +6,34 @@ interface CareRecommendationProps {
 }
 
 function CareRecommendationCard({ recommendation, onFindProviders }: CareRecommendationProps) {
-  const careLevelInfo = getCareLevelInfo(recommendation.careLevel)
-
   const careLevelStyles = {
     emergency: {
       bg: 'bg-red-50',
       border: 'border-red-200',
       badge: 'bg-red-100 text-red-800',
       icon: '🚨',
+      name: 'Emergency Care',
     },
     urgent_care: {
       bg: 'bg-orange-50',
       border: 'border-orange-200',
       badge: 'bg-orange-100 text-orange-800',
       icon: '⚡',
+      name: 'Seek Medical Assessment',
     },
     primary_care: {
       bg: 'bg-amber-50',
       border: 'border-amber-200',
       badge: 'bg-amber-100 text-amber-800',
       icon: '📅',
+      name: 'Healthcare Navigation',
     },
     self_care: {
       bg: 'bg-teal-50',
       border: 'border-teal-200',
       badge: 'bg-teal-100 text-teal-800',
       icon: '✓',
+      name: 'Self-Care',
     },
   }
 
@@ -46,20 +47,13 @@ function CareRecommendationCard({ recommendation, onFindProviders }: CareRecomme
         <div>
           <h3 className="text-lg font-semibold text-ink-900">Your next step</h3>
           <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium mt-2 ${styles.badge}`}>
-            {careLevelInfo?.name}
+            {styles.name}
           </span>
         </div>
       </div>
 
       {/* Reasoning */}
       <p className="text-ink-700 mb-4 leading-relaxed">{recommendation.reasoning}</p>
-
-      {/* Care Level Description */}
-      {careLevelInfo && (
-        <div className="mb-4 p-3 bg-white rounded-xl border border-ink-100">
-          <p className="text-sm text-ink-600">{careLevelInfo.description}</p>
-        </div>
-      )}
 
       {/* Next Steps */}
       <div className="space-y-2 mb-4">

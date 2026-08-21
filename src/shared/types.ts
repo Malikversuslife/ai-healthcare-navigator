@@ -4,6 +4,30 @@ export type CareLevel =
   | 'urgent_care'
   | 'emergency'
 
+export type CarePathway =
+  | 'prompt_medical_review'
+  | 'primary_care'
+  | 'provider_or_specialist'
+  | 'informational_navigation'
+
+export type NavigationEscalationFactor =
+  | 'rapidly_worsening'
+  | 'significant_functional_impact'
+  | 'recurrent_worsening'
+  | 'persistent_concerning_change'
+
+export type SymptomTrend =
+  | 'improving'
+  | 'stable'
+  | 'worsening'
+  | 'rapidly_worsening'
+  | 'unknown'
+
+export interface FunctionalImpact {
+  level?: 'none' | 'mild' | 'significant'
+  description?: string
+}
+
 export type CoverageStatus =
   | 'covered'
   | 'not-covered'
@@ -78,6 +102,17 @@ export interface SafetyResult {
   signals: SafetySignalMatch[]
 }
 
+export interface CareNavigationContext {
+  intent: NavigationIntent
+  healthContext: UserHealthContext
+}
+
+export interface CarePathwayResult {
+  pathway: CarePathway
+  escalationFactors: NavigationEscalationFactor[]
+  rationale: string[]
+}
+
 export interface Provider {
   id: string
   name: string
@@ -132,6 +167,8 @@ export interface UserHealthContext {
   specialty?: string
   location?: string
   insurance?: string
+  functionalImpact?: FunctionalImpact
+  symptomTrend?: SymptomTrend
 }
 
 export interface ConversationProgress {

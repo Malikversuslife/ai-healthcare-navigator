@@ -1,4 +1,4 @@
-import { UserHealthContext, Severity } from '../../shared/types'
+import { UserHealthContext, Severity, FunctionalImpact, SymptomTrend } from '../../shared/types'
 import { AIService, AIExtractionResult } from './types'
 
 const CONCERN_PATTERNS = [
@@ -23,6 +23,8 @@ interface ExtractionResult {
   symptoms: string[]
   duration: string | null
   severity: Severity | null
+  functionalImpact: FunctionalImpact | null
+  symptomTrend: SymptomTrend | null
 }
 
 function extractConcern(message: string): string | null {
@@ -114,12 +116,117 @@ function extractSeverity(message: string): Severity | null {
   return null
 }
 
+function extractFunctionalImpact(message: string): FunctionalImpact | null {
+  const lower = message.toLowerCase()
+
+  // Significant impact
+  if (
+    lower.includes("can't work") ||
+    lower.includes('unable to work') ||
+    lower.includes("can't get out of bed") ||
+    lower.includes('unable to get out of bed') ||
+    lower.includes("can't go to work") ||
+    lower.includes('unable to go to work') ||
+    lower.includes("can't function") ||
+    lower.includes('unable to function') ||
+    lower.includes("can't do normal") ||
+    lower.includes('unable to do normal') ||
+    lower.includes('bedridden') ||
+    lower.includes("can't do daily") ||
+    lower.includes('unable to do daily') ||
+    lower.includes("can't do anything") ||
+    lower.includes('unable to do anything')
+  ) {
+    return { level: 'significant', description: 'User reported inability to perform normal activities' }
+  }
+
+  // Mild impact
+  if (
+    lower.includes('still work') ||
+    lower.includes('can still work') ||
+    lower.includes('manageable') ||
+    lower.includes("can still do") ||
+    lower.includes('affects') ||
+    lower.includes('interferes') ||
+    lower.includes('bothers')
+  ) {
+    return { level: 'mild', description: 'User reported some impact on daily activities' }
+  }
+
+  // None
+  if (
+    lower.includes('no impact') ||
+    lower.includes("doesn't affect") ||
+    lower.includes('does not affect') ||
+    lower.includes('not affecting')
+  ) {
+    return { level: 'none' }
+  }
+
+  return null
+}
+
+function extractSymptomTrend(message: string): SymptomTrend | null {
+  const lower = message.toLowerCase()
+
+  // Rapidly worsening
+  if (
+    lower.includes('rapidly worsen') ||
+    lower.includes('getting worse quickly') ||
+    lower.includes('getting much worse') ||
+    lower.includes('suddenly worse') ||
+    lower.includes('rapidly getting worse')
+  ) {
+    return 'rapidly_worsening'
+  }
+
+  // Worsening
+  if (
+    lower.includes('worsening') ||
+    lower.includes('getting worse') ||
+    lower.includes('becoming worse') ||
+    lower.includes('worse than') ||
+    lower.includes('more painful') ||
+    lower.includes('increasing')
+  ) {
+    return 'worsening'
+  }
+
+  // Improving
+  if (
+    lower.includes('improving') ||
+    lower.includes('getting better') ||
+    lower.includes('better than') ||
+    lower.includes('less painful') ||
+    lower.includes('subsiding') ||
+    lower.includes('easing')
+  ) {
+    return 'improving'
+  }
+
+  // Stable
+  if (
+    lower.includes('same') ||
+    lower.includes('stable') ||
+    lower.includes('unchanged') ||
+    lower.includes('no change') ||
+    lower.includes('consistent') ||
+    lower.includes('about the same')
+  ) {
+    return 'stable'
+  }
+
+  return null
+}
+
 function extractInformation(message: string): ExtractionResult {
   return {
     concern: extractConcern(message),
     symptoms: extractSymptoms(message),
     duration: extractDuration(message),
     severity: extractSeverity(message),
+    functionalImpact: extractFunctionalImpact(message),
+    symptomTrend: extractSymptomTrend(message),
   }
 }
 
@@ -180,6 +287,12 @@ export class MockAIService implements AIService {
     }
     if (extracted.severity !== null) {
       updatedContext.severity = extracted.severity
+    }
+    if (extracted.functionalImpact !== null) {
+      updatedContext.functionalImpact = extracted.functionalImpact
+    }
+    if (extracted.symptomTrend !== null) {
+      updatedContext.symptomTrend = extracted.symptomTrend
     }
 
     // Get appropriate follow-up
