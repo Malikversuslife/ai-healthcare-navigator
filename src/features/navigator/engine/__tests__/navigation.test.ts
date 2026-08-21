@@ -4,18 +4,32 @@ import { UserHealthContext, NavigationContext } from '../../../../shared/types'
 
 describe('evaluateNavigation', () => {
   describe('emergency detection via safety boundary', () => {
-    it('returns emergency action for chest pain', () => {
+    it('returns emergency action for chest pain with breathing difficulty', () => {
       const context: NavigationContext = {
         intent: 'symptom_navigation',
         state: 'collecting_context',
         userContext: {
           concern: 'chest pain',
-          symptoms: ['chest pain'],
+          symptoms: ['struggling to breathe'],
           duration: '30 minutes',
         },
       }
       const action = evaluateNavigation(context)
       expect(action.type).toBe('emergency')
+    })
+
+    it('does NOT trigger emergency for bare chest soreness', () => {
+      const context: NavigationContext = {
+        intent: 'symptom_navigation',
+        state: 'collecting_context',
+        userContext: {
+          concern: 'chest soreness after exercising',
+          symptoms: [],
+          duration: '1 hour',
+        },
+      }
+      const action = evaluateNavigation(context)
+      expect(action.type).not.toBe('emergency')
     })
 
     it('severity 9 alone does NOT trigger emergency', () => {

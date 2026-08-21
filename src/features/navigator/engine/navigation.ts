@@ -5,6 +5,7 @@ import {
   NavigationContext,
   NavigationAction,
 } from '../../../shared/types'
+import { emergencyConfig } from '../../../shared/config'
 import { evaluateEmergencySafety } from './safety'
 import { isContextSufficient, getMissingContextFields } from './context'
 
@@ -86,7 +87,7 @@ export function buildEmergencyRecommendation(): CareRecommendation {
     reasoning: 'What you\'ve described may need immediate medical attention.',
     disclaimer: 'This tool cannot determine or rule out a medical emergency. This is not a medical diagnosis.',
     nextSteps: [
-      { type: 'emergency', label: 'Call Emergency Services', description: 'Dial 112 immediately' },
+      { type: 'emergency', label: 'Call Emergency Services', description: `Dial ${emergencyConfig.emergencyNumber} immediately` },
       { type: 'find-provider', label: 'Find Nearest Hospital', description: 'Locate an emergency room near you' },
     ],
   }
@@ -111,7 +112,7 @@ export function buildRecommendation(
       reasoning: 'What you\'ve described may need immediate medical attention.',
       disclaimer: 'This tool cannot determine or rule out a medical emergency. This is not a medical diagnosis.',
       nextSteps: [
-        { type: 'emergency', label: 'Call Emergency Services', description: 'Dial 112 immediately' },
+        { type: 'emergency', label: 'Call Emergency Services', description: `Dial ${emergencyConfig.emergencyNumber} immediately` },
         { type: 'find-provider', label: 'Find Nearest Hospital', description: 'Locate an emergency room near you' },
       ],
     },

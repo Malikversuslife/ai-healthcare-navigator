@@ -3,6 +3,9 @@ import { evaluateEmergencySafety } from '../safety'
 import { UserHealthContext } from '../../../../shared/types'
 
 describe('evaluateEmergencySafety', () => {
+  // -----------------------------------------------------------------------
+  // False positive protection
+  // -----------------------------------------------------------------------
   describe('false positive protection', () => {
     it('returns triggered: false for non-emergency symptoms', () => {
       const context: UserHealthContext = {
@@ -49,6 +52,9 @@ describe('evaluateEmergencySafety', () => {
     })
   })
 
+  // -----------------------------------------------------------------------
+  // Negation awareness
+  // -----------------------------------------------------------------------
   describe('negation awareness', () => {
     it('does NOT trigger airway_compromise when negated', () => {
       const context: UserHealthContext = {
@@ -106,11 +112,18 @@ describe('evaluateEmergencySafety', () => {
     })
   })
 
+  // -----------------------------------------------------------------------
+  // Historical vs current symptoms
+  //
+  // Time words like "yesterday", "ago", "earlier" do NOT automatically
+  // mean a symptom is resolved. Only suppress when wording clearly
+  // describes a resolved or remote event.
+  // -----------------------------------------------------------------------
   describe('historical vs current symptoms', () => {
-    it('does NOT trigger for historical seizure', () => {
+    it('does NOT trigger for seizure when I was a child', () => {
       const context: UserHealthContext = {
         concern: 'seizure',
-        symptoms: ['I had a seizure last year'],
+        symptoms: ['I had a seizure when I was a child'],
         duration: 'years ago',
       }
       const result = evaluateEmergencySafety(context)
@@ -118,42 +131,83 @@ describe('evaluateEmergencySafety', () => {
       expect(seizureSignal).toBeUndefined()
     })
 
-    it('does NOT trigger for historical chest pain', () => {
-      const context: UserHealthContext = {
-        concern: 'chest pain',
-        symptoms: ['I had chest pain yesterday but it resolved'],
-        duration: 'yesterday',
-      }
-      const result = evaluateEmergencySafety(context)
-      const chestSignal = result.signals.find(s => s.signal === 'high_risk_chest_symptoms')
-      expect(chestSignal).toBeUndefined()
-    })
-
-    it('does NOT trigger for historical breathing difficulty', () => {
+    it('does NOT trigger for trouble breathing two years ago', () => {
       const context: UserHealthContext = {
         concern: 'breathing',
-        symptoms: ['I had difficulty breathing last month'],
-        duration: 'last month',
+        symptoms: ['I had trouble breathing two years ago'],
+        duration: 'two years ago',
       }
       const result = evaluateEmergencySafety(context)
       const breathingSignal = result.signals.find(s => s.signal === 'severe_breathing_difficulty')
       expect(breathingSignal).toBeUndefined()
     })
 
-    it('does NOT trigger for historical loss of consciousness', () => {
+    it('does NOT trigger for passed out last year', () => {
       const context: UserHealthContext = {
         concern: 'fainting',
-        symptoms: ['I passed out two years ago'],
-        duration: 'two years ago',
+        symptoms: ['I passed out last year'],
+        duration: 'last year',
       }
       const result = evaluateEmergencySafety(context)
       const consciousnessSignal = result.signals.find(s => s.signal === 'loss_of_consciousness')
       expect(consciousnessSignal).toBeUndefined()
     })
+
+    it('does NOT trigger for historical chest pain that resolved', () => {
+      const context: UserHealthContext = {
+        concern: 'chest pain',
+        symptoms: ['I had chest pain previously but it resolved'],
+        duration: 'previously',
+      }
+      const result = evaluateEmergencySafety(context)
+      const chestSignal = result.signals.find(s => s.signal === 'high_risk_chest_symptoms')
+      expect(chestSignal).toBeUndefined()
+    })
+
+    // --- Current symptoms MUST NOT be suppressed ---
+
+    it('triggers for struggling to breathe since yesterday (current)', () => {
+      const context: UserHealthContext = {
+        concern: 'breathing',
+        symptoms: ['struggling to breathe since yesterday'],
+        duration: 'since yesterday',
+      }
+      const result = evaluateEmergencySafety(context)
+      expect(result.triggered).toBe(true)
+      const breathingSignal = result.signals.find(s => s.signal === 'severe_breathing_difficulty')
+      expect(breathingSignal).toBeDefined()
+    })
+
+    it('triggers for bleeding an hour ago that still won\'t stop (current)', () => {
+      const context: UserHealthContext = {
+        concern: 'bleeding',
+        symptoms: ['started bleeding an hour ago and it still won\'t stop'],
+        duration: 'an hour ago',
+      }
+      const result = evaluateEmergencySafety(context)
+      expect(result.triggered).toBe(true)
+      const bleedingSignal = result.signals.find(s => s.signal === 'major_bleeding')
+      expect(bleedingSignal).toBeDefined()
+    })
+
+    it('triggers for chest pain earlier with breathing difficulty still present (current)', () => {
+      const context: UserHealthContext = {
+        concern: 'chest pain',
+        symptoms: ['had chest pain earlier and I still have it now, struggling to breathe'],
+        duration: 'earlier',
+      }
+      const result = evaluateEmergencySafety(context)
+      expect(result.triggered).toBe(true)
+      const chestSignal = result.signals.find(s => s.signal === 'high_risk_chest_symptoms')
+      expect(chestSignal).toBeDefined()
+    })
   })
 
+  // -----------------------------------------------------------------------
+  // A. Airway compromise
+  // -----------------------------------------------------------------------
   describe('airway_compromise', () => {
-    it('returns triggered: true for choking', () => {
+    it('triggers for choking', () => {
       const context: UserHealthContext = {
         concern: 'choking',
         symptoms: [],
@@ -166,7 +220,7 @@ describe('evaluateEmergencySafety', () => {
       expect(signal?.matchedIndicators).toContain('choking')
     })
 
-    it('returns triggered: true for throat swelling', () => {
+    it('triggers for throat swelling', () => {
       const context: UserHealthContext = {
         concern: 'throat swelling',
         symptoms: [],
@@ -178,7 +232,7 @@ describe('evaluateEmergencySafety', () => {
       expect(signal).toBeDefined()
     })
 
-    it('returns triggered: true for tongue swelling', () => {
+    it('triggers for tongue swelling', () => {
       const context: UserHealthContext = {
         concern: 'tongue swelling',
         symptoms: [],
@@ -190,7 +244,7 @@ describe('evaluateEmergencySafety', () => {
       expect(signal).toBeDefined()
     })
 
-    it('returns triggered: true for can\'t breathe', () => {
+    it('triggers for can\'t breathe', () => {
       const context: UserHealthContext = {
         concern: 'can\'t breathe',
         symptoms: [],
@@ -203,8 +257,11 @@ describe('evaluateEmergencySafety', () => {
     })
   })
 
+  // -----------------------------------------------------------------------
+  // B. Severe breathing difficulty
+  // -----------------------------------------------------------------------
   describe('severe_breathing_difficulty', () => {
-    it('returns triggered: true for struggling to breathe', () => {
+    it('triggers for struggling to breathe', () => {
       const context: UserHealthContext = {
         concern: 'struggling to breathe',
         symptoms: [],
@@ -216,7 +273,7 @@ describe('evaluateEmergencySafety', () => {
       expect(signal).toBeDefined()
     })
 
-    it('returns triggered: true for severe difficulty breathing', () => {
+    it('triggers for severe difficulty breathing', () => {
       const context: UserHealthContext = {
         concern: 'severe difficulty breathing',
         symptoms: [],
@@ -228,7 +285,7 @@ describe('evaluateEmergencySafety', () => {
       expect(signal).toBeDefined()
     })
 
-    it('returns triggered: true for gasping for air', () => {
+    it('triggers for gasping for air', () => {
       const context: UserHealthContext = {
         concern: 'gasping for air',
         symptoms: [],
@@ -252,8 +309,11 @@ describe('evaluateEmergencySafety', () => {
     })
   })
 
+  // -----------------------------------------------------------------------
+  // C. Loss of consciousness
+  // -----------------------------------------------------------------------
   describe('loss_of_consciousness', () => {
-    it('returns triggered: true for passed out', () => {
+    it('triggers for passed out', () => {
       const context: UserHealthContext = {
         concern: 'passed out',
         symptoms: [],
@@ -265,7 +325,7 @@ describe('evaluateEmergencySafety', () => {
       expect(signal).toBeDefined()
     })
 
-    it('returns triggered: true for not waking', () => {
+    it('triggers for not waking', () => {
       const context: UserHealthContext = {
         concern: 'not waking',
         symptoms: [],
@@ -300,8 +360,11 @@ describe('evaluateEmergencySafety', () => {
     })
   })
 
+  // -----------------------------------------------------------------------
+  // D. Major bleeding
+  // -----------------------------------------------------------------------
   describe('major_bleeding', () => {
-    it('returns triggered: true for bleeding heavily', () => {
+    it('triggers for bleeding heavily', () => {
       const context: UserHealthContext = {
         concern: 'cut',
         symptoms: ['bleeding heavily'],
@@ -313,7 +376,7 @@ describe('evaluateEmergencySafety', () => {
       expect(signal).toBeDefined()
     })
 
-    it('returns triggered: true for severe bleeding', () => {
+    it('triggers for severe bleeding', () => {
       const context: UserHealthContext = {
         concern: 'wound',
         symptoms: ['severe bleeding'],
@@ -325,7 +388,7 @@ describe('evaluateEmergencySafety', () => {
       expect(signal).toBeDefined()
     })
 
-    it('returns triggered: true for uncontrolled bleeding', () => {
+    it('triggers for uncontrolled bleeding', () => {
       const context: UserHealthContext = {
         concern: 'injury',
         symptoms: ['uncontrolled bleeding'],
@@ -338,8 +401,11 @@ describe('evaluateEmergencySafety', () => {
     })
   })
 
+  // -----------------------------------------------------------------------
+  // E. Severe allergic reaction
+  // -----------------------------------------------------------------------
   describe('severe_allergic_reaction', () => {
-    it('returns triggered: true for throat swelling with breathing difficulty', () => {
+    it('triggers for throat swelling with breathing difficulty', () => {
       const context: UserHealthContext = {
         concern: 'allergic reaction',
         symptoms: ['throat swelling', 'difficulty breathing'],
@@ -351,7 +417,7 @@ describe('evaluateEmergencySafety', () => {
       expect(signal).toBeDefined()
     })
 
-    it('returns triggered: true for mouth swelling with wheezing', () => {
+    it('triggers for mouth swelling with wheezing', () => {
       const context: UserHealthContext = {
         concern: 'allergic reaction',
         symptoms: ['mouth swelling', 'wheezing'],
@@ -386,8 +452,11 @@ describe('evaluateEmergencySafety', () => {
     })
   })
 
+  // -----------------------------------------------------------------------
+  // F. Stroke signs
+  // -----------------------------------------------------------------------
   describe('stroke_signs', () => {
-    it('returns triggered: true for sudden face drooping with slurred speech', () => {
+    it('triggers for sudden face drooping with slurred speech', () => {
       const context: UserHealthContext = {
         concern: 'sudden symptoms',
         symptoms: ['face dropped', 'slurred speech'],
@@ -399,7 +468,7 @@ describe('evaluateEmergencySafety', () => {
       expect(signal).toBeDefined()
     })
 
-    it('returns triggered: true for sudden arm numbness with speech difficulty', () => {
+    it('triggers for sudden arm numbness with speech difficulty', () => {
       const context: UserHealthContext = {
         concern: 'sudden symptoms',
         symptoms: ['arm numb', 'speech difficulty'],
@@ -434,11 +503,50 @@ describe('evaluateEmergencySafety', () => {
     })
   })
 
+  // -----------------------------------------------------------------------
+  // G. High-risk chest symptoms
+  //
+  // Chest symptom alone does NOT trigger.
+  // Must have chest symptom + at least one high-risk feature.
+  // -----------------------------------------------------------------------
   describe('high_risk_chest_symptoms', () => {
-    it('returns triggered: true for chest pain with difficulty breathing', () => {
+    it('does NOT trigger for bare chest soreness after exercising', () => {
+      const context: UserHealthContext = {
+        concern: 'chest soreness after exercising',
+        symptoms: [],
+        duration: '1 hour',
+      }
+      const result = evaluateEmergencySafety(context)
+      const chestSignal = result.signals.find(s => s.signal === 'high_risk_chest_symptoms')
+      expect(chestSignal).toBeUndefined()
+    })
+
+    it('does NOT trigger for mild chest discomfort alone', () => {
+      const context: UserHealthContext = {
+        concern: 'chest discomfort',
+        symptoms: [],
+        duration: '2 hours',
+      }
+      const result = evaluateEmergencySafety(context)
+      const chestSignal = result.signals.find(s => s.signal === 'high_risk_chest_symptoms')
+      expect(chestSignal).toBeUndefined()
+    })
+
+    it('does NOT trigger for chest tightness alone', () => {
+      const context: UserHealthContext = {
+        concern: 'chest tightness',
+        symptoms: [],
+        duration: '30 minutes',
+      }
+      const result = evaluateEmergencySafety(context)
+      const chestSignal = result.signals.find(s => s.signal === 'high_risk_chest_symptoms')
+      expect(chestSignal).toBeUndefined()
+    })
+
+    it('triggers for severe chest pain with struggling to breathe', () => {
       const context: UserHealthContext = {
         concern: 'chest pain',
-        symptoms: ['difficulty breathing'],
+        symptoms: ['struggling to breathe'],
         duration: '20 minutes',
       }
       const result = evaluateEmergencySafety(context)
@@ -447,19 +555,7 @@ describe('evaluateEmergencySafety', () => {
       expect(signal).toBeDefined()
     })
 
-    it('returns triggered: true for crushing chest pain', () => {
-      const context: UserHealthContext = {
-        concern: 'crushing chest pain',
-        symptoms: [],
-        duration: '10 minutes',
-      }
-      const result = evaluateEmergencySafety(context)
-      expect(result.triggered).toBe(true)
-      const signal = result.signals.find(s => s.signal === 'high_risk_chest_symptoms')
-      expect(signal).toBeDefined()
-    })
-
-    it('returns triggered: true for chest pain with passed out', () => {
+    it('triggers for chest pain with passed out', () => {
       const context: UserHealthContext = {
         concern: 'chest pain',
         symptoms: ['passed out'],
@@ -471,20 +567,48 @@ describe('evaluateEmergencySafety', () => {
       expect(signal).toBeDefined()
     })
 
-    it('returns triggered: true for bare chest pain', () => {
+    it('triggers for crushing chest pain (crushing is severity modifier)', () => {
       const context: UserHealthContext = {
-        concern: 'chest discomfort',
+        concern: 'crushing chest pain',
         symptoms: [],
-        duration: '2 hours',
+        duration: '10 minutes',
       }
       const result = evaluateEmergencySafety(context)
-      const chestSignal = result.signals.find(s => s.signal === 'high_risk_chest_symptoms')
-      expect(chestSignal).toBeDefined()
+      expect(result.triggered).toBe(true)
+      const signal = result.signals.find(s => s.signal === 'high_risk_chest_symptoms')
+      expect(signal).toBeDefined()
+    })
+
+    it('triggers for chest pain with difficulty breathing', () => {
+      const context: UserHealthContext = {
+        concern: 'chest pain',
+        symptoms: ['difficulty breathing'],
+        duration: '20 minutes',
+      }
+      const result = evaluateEmergencySafety(context)
+      expect(result.triggered).toBe(true)
+      const signal = result.signals.find(s => s.signal === 'high_risk_chest_symptoms')
+      expect(signal).toBeDefined()
+    })
+
+    it('triggers for chest pain with collapse', () => {
+      const context: UserHealthContext = {
+        concern: 'chest pain',
+        symptoms: ['collapsed'],
+        duration: '5 minutes',
+      }
+      const result = evaluateEmergencySafety(context)
+      expect(result.triggered).toBe(true)
+      const signal = result.signals.find(s => s.signal === 'high_risk_chest_symptoms')
+      expect(signal).toBeDefined()
     })
   })
 
+  // -----------------------------------------------------------------------
+  // H. Active seizure
+  // -----------------------------------------------------------------------
   describe('active_seizure', () => {
-    it('returns triggered: true for seizure happening now', () => {
+    it('triggers for seizure happening now', () => {
       const context: UserHealthContext = {
         concern: 'seizure happening now',
         symptoms: [],
@@ -496,7 +620,7 @@ describe('evaluateEmergencySafety', () => {
       expect(signal).toBeDefined()
     })
 
-    it('returns triggered: true for repeated seizures', () => {
+    it('triggers for repeated seizures', () => {
       const context: UserHealthContext = {
         concern: 'repeated seizures',
         symptoms: [],
@@ -508,7 +632,7 @@ describe('evaluateEmergencySafety', () => {
       expect(signal).toBeDefined()
     })
 
-    it('returns triggered: true for prolonged seizure', () => {
+    it('triggers for prolonged seizure', () => {
       const context: UserHealthContext = {
         concern: 'prolonged seizure',
         symptoms: [],
@@ -520,10 +644,10 @@ describe('evaluateEmergencySafety', () => {
       expect(signal).toBeDefined()
     })
 
-    it('does NOT trigger for historical seizure', () => {
+    it('does NOT trigger for historical seizure when I was a child', () => {
       const context: UserHealthContext = {
         concern: 'seizure',
-        symptoms: ['I had a seizure last year'],
+        symptoms: ['I had a seizure when I was a child'],
         duration: 'years ago',
       }
       const result = evaluateEmergencySafety(context)

@@ -38,14 +38,6 @@ const POST_KEYWORD_NEGATION = [
   ' is not happening', ' not happening',
 ]
 
-const HISTORICAL_MARKERS = [
-  'yesterday', 'last week', 'last month', 'last year',
-  'ago', 'previously', 'before', 'earlier', 'in the past',
-  'when i was', 'as a child', 'when i was a child',
-  'two years ago', 'a few years ago', 'years ago',
-  'a long time ago', 'back then',
-]
-
 function hasNegation(text: string, keyword: string): boolean {
   const lower = text.toLowerCase()
   const kwLower = keyword.toLowerCase()
@@ -63,9 +55,59 @@ function hasNegation(text: string, keyword: string): boolean {
   return false
 }
 
-function isHistoricalContext(text: string): boolean {
+// ---------------------------------------------------------------------------
+// Historical vs current context detection
+//
+// Time words like "yesterday", "ago", "earlier" do NOT automatically mean
+// a symptom is resolved or historical. Only suppress when the wording
+// clearly describes a resolved or remote event.
+//
+// Current indicators override historical markers:
+//   "since yesterday" → current
+//   "an hour ago and it still won't stop" → current
+//   "earlier and I still have it now" → current
+//
+// Only suppress when NO current indicators are present alongside the
+// historical markers.
+// ---------------------------------------------------------------------------
+
+const CURRENT_INDICATORS = [
+  'since ', 'still ', 'and still ', 'right now', 'and now',
+  'is happening', 'won\'t stop', 'will not stop', 'hasn\'t stopped',
+  'has not stopped', 'ongoing', 'continuing', 'persisting',
+]
+
+const RESOLVED_OR_REMOTE_PATTERNS = [
+  // "I had X when I was a child"
+  'when i was',
+  'as a child',
+  // "I had X two years ago" (without current indicators)
+  'years ago',
+  'a long time ago',
+  'back then',
+  // "I had X last year/week/month" (without current indicators)
+  'last year',
+  'last week',
+  'last month',
+  // "I previously had X"
+  'previously',
+  'in the past',
+]
+
+function isResolvedOrRemoteContext(text: string): boolean {
   const lower = text.toLowerCase()
-  return HISTORICAL_MARKERS.some(marker => lower.includes(marker))
+
+  // If ANY current indicator is present, the symptom is ongoing — do not suppress
+  if (CURRENT_INDICATORS.some(indicator => lower.includes(indicator))) {
+    return false
+  }
+
+  // Check for resolved/remote patterns
+  if (RESOLVED_OR_REMOTE_PATTERNS.some(pattern => lower.includes(pattern))) {
+    return true
+  }
+
+  return false
 }
 
 // ---------------------------------------------------------------------------
@@ -81,6 +123,14 @@ function combineText(context: UserHealthContext): string {
   return [context.concern, ...context.symptoms].join(' ').toLowerCase()
 }
 
+// Shared helper: check if any keyword in a list matches (not negated)
+function hasAnyKeyword(text: string, keywords: string[]): boolean {
+  return keywords.some(kw => {
+    if (hasNegation(text, kw)) return false
+    return text.includes(kw)
+  })
+}
+
 const SAFETY_SIGNAL_RULES: SafetySignalRule[] = [
   // A. Airway compromise / choking
   {
@@ -89,24 +139,15 @@ const SAFETY_SIGNAL_RULES: SafetySignalRule[] = [
       const combined = combineText(ctx)
       const indicators: string[] = []
 
-      // Must have airway-related keywords
       const airwayKeywords = [
         'choking', 'airway blocked', 'throat swelling',
         'tongue swelling', 'can\'t breathe', 'unable to breathe',
         'can\'t speak', 'unable to speak',
       ]
 
-      const hasAirway = airwayKeywords.some(kw => {
-        if (hasNegation(combined, kw)) return false
-        return combined.includes(kw)
-      })
+      if (!hasAnyKeyword(combined, airwayKeywords)) return null
+      if (isResolvedOrRemoteContext(combined)) return null
 
-      if (!hasAirway) return null
-
-      // Must NOT be clearly historical
-      if (isHistoricalContext(combined)) return null
-
-      // Collect matched indicators
       for (const kw of airwayKeywords) {
         if (hasNegation(combined, kw)) continue
         if (combined.includes(kw)) indicators.push(kw)
@@ -133,24 +174,16 @@ const SAFETY_SIGNAL_RULES: SafetySignalRule[] = [
         'unable to breathe', 'difficulty breathing',
       ]
 
-      // Must have severity modifier OR a strong breathing phrase
       const strongPhrases = [
         'struggling to breathe', 'cannot breathe', 'can\'t breathe',
         'gasping for air', 'unable to breathe',
       ]
 
-      const hasStrong = strongPhrases.some(kw => {
-        if (hasNegation(combined, kw)) return false
-        return combined.includes(kw)
-      })
-
-      const hasBreathingKeyword = breathingKeywords.some(kw => {
-        if (hasNegation(combined, kw)) return false
-        return combined.includes(kw)
-      })
+      const hasStrong = hasAnyKeyword(combined, strongPhrases)
+      const hasBreathingKeyword = hasAnyKeyword(combined, breathingKeywords)
 
       if (!hasStrong && !hasBreathingKeyword) return null
-      if (isHistoricalContext(combined)) return null
+      if (isResolvedOrRemoteContext(combined)) return null
 
       // For weaker phrases like "difficulty breathing", require severity modifier
       if (!hasStrong) {
@@ -185,13 +218,8 @@ const SAFETY_SIGNAL_RULES: SafetySignalRule[] = [
         'lost consciousness', 'blackout',
       ]
 
-      const hasConsciousness = consciousnessKeywords.some(kw => {
-        if (hasNegation(combined, kw)) return false
-        return combined.includes(kw)
-      })
-
-      if (!hasConsciousness) return null
-      if (isHistoricalContext(combined)) return null
+      if (!hasAnyKeyword(combined, consciousnessKeywords)) return null
+      if (isResolvedOrRemoteContext(combined)) return null
 
       // Exclude "nearly passed out" / "almost passed out"
       const nearMiss = ['nearly', 'almost', 'felt like']
@@ -222,15 +250,22 @@ const SAFETY_SIGNAL_RULES: SafetySignalRule[] = [
         'bleeding heavily', 'severe bleeding', 'uncontrolled bleeding',
         'losing a lot of blood', 'rapidly losing blood',
         'bleeding and won\'t stop', 'bleeding and will not stop',
+        'won\'t stop bleeding', 'will not stop bleeding',
+        'bleeding won\'t stop', 'bleeding that won\'t stop',
       ]
 
-      const hasBleeding = bleedingKeywords.some(kw => {
+      // Also check for "bleeding" + "won't stop" as a combination
+      // to match natural phrasing like "bleeding an hour ago and it still won't stop"
+      const hasExactMatch = bleedingKeywords.some(kw => {
         if (hasNegation(combined, kw)) return false
         return combined.includes(kw)
       })
+      const hasBleedingAndStopIssue =
+        combined.includes('bleeding') &&
+        (combined.includes('won\'t stop') || combined.includes('will not stop'))
 
-      if (!hasBleeding) return null
-      if (isHistoricalContext(combined)) return null
+      if (!hasExactMatch && !hasBleedingAndStopIssue) return null
+      if (isResolvedOrRemoteContext(combined)) return null
 
       for (const kw of bleedingKeywords) {
         if (hasNegation(combined, kw)) continue
@@ -252,32 +287,22 @@ const SAFETY_SIGNAL_RULES: SafetySignalRule[] = [
       const combined = combineText(ctx)
       const indicators: string[] = []
 
-      // Swelling keywords
       const swellingKeywords = [
         'tongue swelling', 'mouth swelling', 'throat swelling',
         'swollen tongue', 'swollen mouth', 'swollen throat',
         'swelling of tongue', 'swelling of mouth', 'swelling of throat',
       ]
 
-      // Breathing keywords
       const breathingKeywords = [
         'difficulty breathing', 'struggling to breathe',
         'wheezing', 'can\'t breathe', 'airway',
       ]
 
-      const hasSwelling = swellingKeywords.some(kw => {
-        if (hasNegation(combined, kw)) return false
-        return combined.includes(kw)
-      })
+      const hasSwelling = hasAnyKeyword(combined, swellingKeywords)
+      const hasBreathing = hasAnyKeyword(combined, breathingKeywords)
 
-      const hasBreathing = breathingKeywords.some(kw => {
-        if (hasNegation(combined, kw)) return false
-        return combined.includes(kw)
-      })
-
-      // Must have BOTH swelling AND breathing involvement
       if (!hasSwelling || !hasBreathing) return null
-      if (isHistoricalContext(combined)) return null
+      if (isResolvedOrRemoteContext(combined)) return null
 
       for (const kw of [...swellingKeywords, ...breathingKeywords]) {
         if (hasNegation(combined, kw)) continue
@@ -299,12 +324,10 @@ const SAFETY_SIGNAL_RULES: SafetySignalRule[] = [
       const combined = combineText(ctx)
       const indicators: string[] = []
 
-      // Must have sudden onset language
       const suddenOnset = ['suddenly', 'sudden', 'just now', 'just happened', 'out of nowhere']
       const hasSudden = suddenOnset.some(s => combined.includes(s))
       if (!hasSudden) return null
 
-      // Neurological signs (includes direct "stroke" mention)
       const neurologicalSigns = [
         'stroke', 'face dropped', 'face drooping', 'facial weakness',
         'arm numb', 'arm weak', 'arm weakness', 'numbness in arm',
@@ -312,13 +335,8 @@ const SAFETY_SIGNAL_RULES: SafetySignalRule[] = [
         'can\'t speak', 'difficulty speaking',
       ]
 
-      const hasNeurological = neurologicalSigns.some(kw => {
-        if (hasNegation(combined, kw)) return false
-        return combined.includes(kw)
-      })
-
-      if (!hasNeurological) return null
-      if (isHistoricalContext(combined)) return null
+      if (!hasAnyKeyword(combined, neurologicalSigns)) return null
+      if (isResolvedOrRemoteContext(combined)) return null
 
       for (const kw of neurologicalSigns) {
         if (hasNegation(combined, kw)) continue
@@ -334,6 +352,15 @@ const SAFETY_SIGNAL_RULES: SafetySignalRule[] = [
   },
 
   // G. High-risk chest symptoms
+  //
+  // Chest symptom alone does NOT trigger. Must have a concerning combination:
+  //   chest symptom + at least one high-risk feature.
+  //
+  // High-risk features:
+  //   - Severe breathing difficulty keywords
+  //   - Loss of consciousness keywords
+  //   - Collapse/sudden deterioration
+  //   - "crushing" as severity modifier (crushing chest pain alone qualifies)
   {
     signal: 'high_risk_chest_symptoms',
     check: (ctx) => {
@@ -345,15 +372,32 @@ const SAFETY_SIGNAL_RULES: SafetySignalRule[] = [
         'pressure in chest', 'crushing chest',
       ]
 
-      const hasChest = chestKeywords.some(kw => {
-        if (hasNegation(combined, kw)) return false
-        return combined.includes(kw)
-      })
+      if (!hasAnyKeyword(combined, chestKeywords)) return null
+      if (isResolvedOrRemoteContext(combined)) return null
 
-      if (!hasChest) return null
-      if (isHistoricalContext(combined)) return null
+      // Check for high-risk features alongside the chest symptom
+      const highRiskFeatures = [
+        // Breathing difficulty
+        'struggling to breathe', 'cannot breathe', 'can\'t breathe',
+        'gasping for air', 'unable to breathe', 'severe difficulty breathing',
+        'severe shortness of breath', 'difficulty breathing',
+        // Loss of consciousness / collapse
+        'passed out', 'unconscious', 'collapsed', 'collapse',
+        'not waking', 'lost consciousness',
+        // "crushing" as severity modifier
+        'crushing',
+      ]
 
+      const hasHighRiskFeature = hasAnyKeyword(combined, highRiskFeatures)
+
+      if (!hasHighRiskFeature) return null
+
+      // Collect matched indicators
       for (const kw of chestKeywords) {
+        if (hasNegation(combined, kw)) continue
+        if (combined.includes(kw)) indicators.push(kw)
+      }
+      for (const kw of highRiskFeatures) {
         if (hasNegation(combined, kw)) continue
         if (combined.includes(kw)) indicators.push(kw)
       }
@@ -381,13 +425,8 @@ const SAFETY_SIGNAL_RULES: SafetySignalRule[] = [
         'seizure without recovery',
       ]
 
-      const hasSeizure = seizureKeywords.some(kw => {
-        if (hasNegation(combined, kw)) return false
-        return combined.includes(kw)
-      })
-
-      if (!hasSeizure) return null
-      if (isHistoricalContext(combined)) return null
+      if (!hasAnyKeyword(combined, seizureKeywords)) return null
+      if (isResolvedOrRemoteContext(combined)) return null
 
       for (const kw of seizureKeywords) {
         if (hasNegation(combined, kw)) continue
