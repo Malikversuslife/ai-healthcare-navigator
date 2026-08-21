@@ -209,13 +209,12 @@ export function useConversation() {
           dispatch({ type: 'SET_NAVIGATION_STATE', state: 'collecting_context' })
           dispatch({ type: 'SET_STEP', step: 'follow-up' })
 
-          // Application determines the follow-up question based on missing fields
+          // Application determines the follow-up question based on missing fields.
+          // The AI's conversational acknowledgement is NOT used to override
+          // which field the application needs to collect next.
           const appFollowUp = generateFollowUpPrompt(navAction.missingFields)
 
-          // Use AI response if it has content, otherwise use application-determined prompt
-          const responseText = result.response || appFollowUp
-
-          addMessage('assistant', responseText, {
+          addMessage('assistant', appFollowUp, {
             extractedContext: result.extractedContext,
           })
           break

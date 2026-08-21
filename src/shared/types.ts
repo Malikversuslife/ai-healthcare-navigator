@@ -26,7 +26,6 @@ export type NavigationIntent =
 
 export interface NavigationIntentResult {
   intent: NavigationIntent
-  confidence?: number
 }
 
 export type NavigationState =

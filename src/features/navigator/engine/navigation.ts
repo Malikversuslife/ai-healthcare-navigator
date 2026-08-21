@@ -78,15 +78,14 @@ export function evaluateNavigation(
   return { type: 'collect_context', missingFields: missing }
 }
 
-export function determineCareLevel(context: UserHealthContext): CareLevel {
-  const safety = containsEmergencyIndicators(context)
-  if (safety.triggered) return 'emergency'
-
-  const severityValue = context.severity?.value
-
-  if (severityValue !== undefined && severityValue >= 7) return 'urgent_care'
-  if (severityValue !== undefined && severityValue >= 4) return 'primary_care'
-  return 'self_care'
+export function determineCareLevel(_context: UserHealthContext): CareLevel {
+  // STAGE 4A PLACEHOLDER — intentionally incomplete.
+  // Care-level determination rules must NOT be invented here.
+  // This function will be populated with clinically-grounded rules in Stage 4B.
+  // Do not add severity thresholds, symptom-based rules, or any medical logic.
+  // For now, all paths return 'primary_care' as a safe placeholder that
+  // directs the user to a healthcare provider without making medical claims.
+  return 'primary_care'
 }
 
 export function buildRecommendation(

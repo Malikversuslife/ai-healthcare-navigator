@@ -3,7 +3,7 @@ import { evaluateNavigation, determineCareLevel, buildRecommendation } from '../
 import { UserHealthContext, NavigationContext } from '../../../../shared/types'
 
 describe('evaluateNavigation', () => {
-  describe('emergency detection', () => {
+  describe('emergency detection via safety boundary', () => {
     it('returns emergency action for chest pain', () => {
       const context: NavigationContext = {
         intent: 'symptom_navigation',
@@ -18,7 +18,7 @@ describe('evaluateNavigation', () => {
       expect(action.type).toBe('emergency')
     })
 
-    it('returns emergency action for severity >= 9', () => {
+    it('severity 9 alone does NOT trigger emergency', () => {
       const context: NavigationContext = {
         intent: 'symptom_navigation',
         state: 'collecting_context',
@@ -30,12 +30,11 @@ describe('evaluateNavigation', () => {
         },
       }
       const action = evaluateNavigation(context)
-      expect(action.type).toBe('emergency')
+      expect(action.type).not.toBe('emergency')
     })
   })
 
   describe('symptom_navigation', () => {
-    // Test 1 — Missing duration
     it('returns collect_context when duration is missing', () => {
       const context: NavigationContext = {
         intent: 'symptom_navigation',
@@ -53,7 +52,6 @@ describe('evaluateNavigation', () => {
       }
     })
 
-    // Test 2 — Complete symptom context
     it('returns safety_check when context is complete', () => {
       const context: NavigationContext = {
         intent: 'symptom_navigation',
@@ -70,7 +68,6 @@ describe('evaluateNavigation', () => {
   })
 
   describe('find_provider', () => {
-    // Test 3 — Provider search
     it('returns search_providers when specialty and location present', () => {
       const context: NavigationContext = {
         intent: 'find_provider',
@@ -107,7 +104,6 @@ describe('evaluateNavigation', () => {
   })
 
   describe('find_hospital', () => {
-    // Test 4 — Hospital search
     it('returns search_providers when location present', () => {
       const context: NavigationContext = {
         intent: 'find_hospital',
@@ -125,7 +121,6 @@ describe('evaluateNavigation', () => {
   })
 
   describe('insurance', () => {
-    // Test 5 — Insurance
     it('returns check_insurance when insurance present', () => {
       const context: NavigationContext = {
         intent: 'insurance',
@@ -143,7 +138,6 @@ describe('evaluateNavigation', () => {
   })
 
   describe('general_healthcare', () => {
-    // Test 6 — General healthcare
     it('returns answer_general_question without symptom intake', () => {
       const context: NavigationContext = {
         intent: 'general_healthcare',
@@ -160,7 +154,6 @@ describe('evaluateNavigation', () => {
   })
 
   describe('state preservation', () => {
-    // Test 7 — Existing emergency boundary
     it('safety is evaluated before recommendation logic', () => {
       const context: NavigationContext = {
         intent: 'symptom_navigation',
@@ -192,42 +185,68 @@ describe('evaluateNavigation', () => {
 })
 
 describe('determineCareLevel', () => {
-  it('returns emergency for emergency indicators', () => {
-    const context: UserHealthContext = {
-      concern: 'chest pain',
-      symptoms: ['chest pain'],
-      duration: '30 minutes',
+  it('returns primary_care as placeholder for all contexts', () => {
+    // Stage 4A: care-level determination is intentionally incomplete.
+    // All paths return primary_care as a safe placeholder.
+    const contexts: UserHealthContext[] = [
+      {
+        concern: 'headache',
+        symptoms: ['headache'],
+        duration: 'since yesterday',
+      },
+      {
+        concern: 'pain',
+        symptoms: ['pain'],
+        duration: '1 hour',
+        severity: { value: 7 },
+      },
+      {
+        concern: 'pain',
+        symptoms: ['pain'],
+        duration: '1 day',
+        severity: { value: 4 },
+      },
+      {
+        concern: 'mild cold',
+        symptoms: ['runny nose'],
+        duration: '3 days',
+      },
+    ]
+
+    for (const context of contexts) {
+      expect(determineCareLevel(context)).toBe('primary_care')
     }
-    expect(determineCareLevel(context)).toBe('emergency')
   })
 
-  it('returns urgent_care for severity >= 7', () => {
+  it('severity 7 does NOT independently produce urgent_care', () => {
     const context: UserHealthContext = {
       concern: 'pain',
       symptoms: ['pain'],
       duration: '1 hour',
       severity: { value: 7 },
     }
-    expect(determineCareLevel(context)).toBe('urgent_care')
+    expect(determineCareLevel(context)).not.toBe('urgent_care')
   })
 
-  it('returns primary_care for severity >= 4', () => {
+  it('severity 4 does NOT independently produce primary_care from rules', () => {
+    // It returns primary_care, but only because ALL contexts return
+    // primary_care as a placeholder — not because of a severity rule.
     const context: UserHealthContext = {
       concern: 'pain',
       symptoms: ['pain'],
       duration: '1 day',
-      severity: { value: 5 },
+      severity: { value: 4 },
     }
     expect(determineCareLevel(context)).toBe('primary_care')
   })
 
-  it('returns self_care for low or no severity', () => {
+  it('low/no severity does NOT automatically produce self_care', () => {
     const context: UserHealthContext = {
       concern: 'mild headache',
       symptoms: ['headache'],
       duration: 'a few hours',
     }
-    expect(determineCareLevel(context)).toBe('self_care')
+    expect(determineCareLevel(context)).not.toBe('self_care')
   })
 })
 
@@ -243,14 +262,14 @@ describe('buildRecommendation', () => {
     expect(rec.nextSteps.some(s => s.type === 'emergency')).toBe(true)
   })
 
-  it('builds self_care recommendation', () => {
+  it('builds primary_care recommendation', () => {
     const context: UserHealthContext = {
       concern: 'mild headache',
       symptoms: ['headache'],
       duration: 'a few hours',
     }
-    const rec = buildRecommendation(context, 'self_care')
-    expect(rec.careLevel).toBe('self_care')
+    const rec = buildRecommendation(context, 'primary_care')
+    expect(rec.careLevel).toBe('primary_care')
     expect(rec.disclaimer).toBeTruthy()
   })
 })

@@ -1,5 +1,19 @@
 import { UserHealthContext, NavigationIntent } from '../../../shared/types'
 
+// STAGE 4A — MINIMAL SAFETY BOUNDARY.
+//
+// This rule set is INTENTIONALLY INCOMPLETE and must NOT be treated as
+// comprehensive clinical triage. It establishes the interface and
+// integration point for the safety engine.
+//
+// The emergency symptom list and severity thresholds will be defined
+// using reputable clinical/public-health guidance in Stage 4B.
+//
+// Do NOT add medical rules here. Do NOT expand this list based on
+// assumptions about what constitutes an emergency.
+//
+// The current keyword list is a structural placeholder only.
+
 const EMERGENCY_SYMPTOMS = [
   'chest pain',
   'difficulty breathing',
@@ -28,9 +42,10 @@ export function containsEmergencyIndicators(context: UserHealthContext): SafetyR
     }
   }
 
-  if (context.severity?.value !== undefined && context.severity.value >= 9) {
-    indicators.push(`severity: ${context.severity.value}`)
-  }
+  // NOTE: Severity alone must NOT become the medical emergency engine.
+  // Do not add `severity >= N → emergency` rules here.
+  // Emergency detection must be based on clinical indicators, not
+  // a single numerical value.
 
   return {
     triggered: indicators.length > 0,
