@@ -12,8 +12,105 @@
 
 import { Provider } from '../../../shared/types'
 import { ProviderMatch, ProviderSearchContext, ProviderMatchReason } from '../../../shared/types'
-import { isSpecialtyMatch } from './specialty-normalization'
+import { isSpecialtyMatch, normalizeSpecialty } from './specialty-normalization'
 import { calculateDistance } from '../../../shared/utils/distance'
+
+// ---------------------------------------------------------------------------
+// Known area → city mapping (Nigeria-first)
+// ---------------------------------------------------------------------------
+
+const AREA_TO_CITY: Record<string, string> = {
+  // Lagos
+  lekki: 'Lagos',
+  'lekki phase 1': 'Lagos',
+  'lekki phase 2': 'Lagos',
+  'victoria island': 'Lagos',
+  ikoyi: 'Lagos',
+  ikorodu: 'Lagos',
+  yaba: 'Lagos',
+  surulere: 'Lagos',
+  ikeja: 'Lagos',
+  gbagada: 'Lagos',
+  maryland: 'Lagos',
+  ogudu: 'Lagos',
+  ojota: 'Lagos',
+  ketu: 'Lagos',
+  mushin: 'Lagos',
+  oshodi: 'Lagos',
+  isolo: 'Lagos',
+  ejigbo: 'Lagos',
+  festac: 'Lagos',
+  amuwo: 'Lagos',
+  badagry: 'Lagos',
+  epe: 'Lagos',
+  ajah: 'Lagos',
+  sangotedo: 'Lagos',
+  langbasa: 'Lagos',
+  bogije: 'Lagos',
+  igando: 'Lagos',
+  ipaja: 'Lagos',
+  agege: 'Lagos',
+  ogba: 'Lagos',
+  // Abuja
+  wuse: 'Abuja',
+  garki: 'Abuja',
+  maitama: 'Abuja',
+  asokoro: 'Abuja',
+  guzape: 'Abuja',
+  jabi: 'Abuja',
+  gwarimpa: 'Abuja',
+  lifecamp: 'Abuja',
+  kubwa: 'Abuja',
+  lugbe: 'Abuja',
+  karu: 'Abuja',
+  nyanya: 'Abuja',
+  kuje: 'Abuja',
+  bwari: 'Abuja',
+  'airport road': 'Abuja',
+  // Ibadan
+  bodija: 'Ibadan',
+  ui: 'Ibadan',
+  challenge: 'Ibadan',
+  dugbe: 'Ibadan',
+  mapo: 'Ibadan',
+  agodi: 'Ibadan',
+  jericho: 'Ibadan',
+  'iwo road': 'Ibadan',
+  oluyole: 'Ibadan',
+  akobo: 'Ibadan',
+  sango: 'Ibadan',
+  // Port Harcourt
+  diobu: 'Port Harcourt',
+  'trans amadi': 'Port Harcourt',
+  rumuokoro: 'Port Harcourt',
+  choba: 'Port Harcourt',
+  aluu: 'Port Harcourt',
+  woji: 'Port Harcourt',
+  eliozu: 'Port Harcourt',
+  nkpolu: 'Port Harcourt',
+  oginigba: 'Port Harcourt',
+  'd-line': 'Port Harcourt',
+  'ada george': 'Port Harcourt',
+  'rumubuwa': 'Port Harcourt',
+  'rumuigbo': 'Port Harcourt',
+  'rumuepirikom': 'Port Harcourt',
+  rumueme: 'Port Harcourt',
+  'rumuodumaya': 'Port Harcourt',
+  rumola: 'Port Harcourt',
+  iwofe: 'Port Harcourt',
+  'amadi-ama': 'Port Harcourt',
+  kolobirise: 'Port Harcourt',
+  'oro-abali': 'Port Harcourt',
+  // Ilorin
+  adanla: 'Ilorin',
+  sawmill: 'Ilorin',
+  ojuekun: 'Ilorin',
+  muritala: 'Ilorin',
+  'unity road': 'Ilorin',
+  ibeji: 'Ilorin',
+  agaka: 'Ilorin',
+  okoolu: 'Ilorin',
+}
 
 // ---------------------------------------------------------------------------
 // Ranking weights — documented, transparent, deterministic
@@ -38,19 +135,45 @@ const MAX_CONSULTATION_FEE = 50000
 // Candidate retrieval — basic filtering before scoring
 // ---------------------------------------------------------------------------
 
+function resolveCityFromArea(input: string): string | undefined {
+  const lower = input.toLowerCase().trim()
+  if (AREA_TO_CITY[lower]) return AREA_TO_CITY[lower]
+  // Try partial match
+  for (const [area, city] of Object.entries(AREA_TO_CITY)) {
+    if (lower.includes(area) || area.includes(lower)) return city
+  }
+  return undefined
+}
+
 function retrieveCandidates(
   providers: Provider[],
   context: ProviderSearchContext
 ): Provider[] {
   let candidates = [...providers]
 
-  // City filter: if city is specified, only providers in that city (or telehealth)
-  if (context.city) {
-    const cityLower = context.city.toLowerCase()
+  const searchCity = context.city?.toLowerCase()
+  const searchArea = context.area?.toLowerCase()
+
+  // Resolve area → city if user provided an area name
+  const resolvedCity = searchCity || (searchArea ? resolveCityFromArea(searchArea) : undefined)
+
+  if (resolvedCity) {
+    const resolvedCityLower = resolvedCity.toLowerCase()
     candidates = candidates.filter(p =>
-      p.location.city.toLowerCase().includes(cityLower) ||
+      p.location.city.toLowerCase().includes(resolvedCityLower) ||
       p.type === 'telehealth'
     )
+  }
+
+  // If user provided an area name, further filter by area match
+  if (searchArea && resolvedCity) {
+    const areaCandidates = candidates.filter(p =>
+      p.location.area.toLowerCase().includes(searchArea)
+    )
+    // If area filtering yields results, use them; otherwise keep city-filtered list
+    if (areaCandidates.length > 0) {
+      candidates = areaCandidates
+    }
   }
 
   return candidates
@@ -187,7 +310,9 @@ function buildMatchReasons(
   areaMatch: boolean,
   insuranceStatus: 'accepted' | 'not_accepted' | 'unknown',
   availability: Provider['availability'],
-  distanceKm: number | null
+  distanceKm: number | null,
+  isLowerCost: boolean,
+  isHighRating: boolean
 ): ProviderMatchReason[] {
   const reasons: ProviderMatchReason[] = []
 
@@ -198,7 +323,8 @@ function buildMatchReasons(
   if (insuranceStatus === 'accepted') reasons.push('insurance_match')
   if (availability === 'available') reasons.push('available')
   if (distanceKm !== null && distanceKm < 10) reasons.push('nearby')
-  if (distanceKm !== null && distanceKm < 5) reasons.push('lower_cost')
+  if (isLowerCost) reasons.push('lower_cost')
+  if (isHighRating) reasons.push('high_rating')
 
   return reasons
 }
@@ -222,7 +348,7 @@ export function rankProviders(
 
   const matches: ProviderMatch[] = candidates.map(provider => {
     const specialty = scoreSpecialty(provider, context.specialty)
-    const providerType = scoreProviderType(provider, context.providerType)
+    let providerType = scoreProviderType(provider, context.providerType)
     const city = scoreCity(provider, context.city)
     const area = scoreArea(provider, context.area)
     const insurance = scoreInsurance(provider, context.insurance)
@@ -230,6 +356,11 @@ export function rankProviders(
     const distance = scoreDistance(provider, context.userCoordinates)
     const ratingScore = scoreRating(provider.rating)
     const costScore = scoreCost(provider.consultationFee)
+
+    // general_practice specialty matches any provider type
+    if (context.specialty && normalizeSpecialty(context.specialty).toLowerCase() === 'general practice') {
+      providerType = { score: providerType.score || WEIGHTS.providerTypeMatch, matched: true }
+    }
 
     const totalScore =
       specialty.score +
@@ -242,6 +373,9 @@ export function rankProviders(
       ratingScore +
       costScore
 
+    const isLowerCost = provider.consultationFee < 8000
+    const isHighRating = provider.rating >= 4.5
+
     const matchReasons = buildMatchReasons(
       specialty.matched,
       providerType.matched,
@@ -249,7 +383,9 @@ export function rankProviders(
       area.matched,
       insurance.status,
       provider.availability,
-      distance.distanceKm
+      distance.distanceKm,
+      isLowerCost,
+      isHighRating
     )
 
     return {

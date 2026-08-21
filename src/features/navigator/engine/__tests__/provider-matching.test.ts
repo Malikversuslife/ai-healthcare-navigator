@@ -97,14 +97,16 @@ describe('rankProviders', () => {
       expect(results[0].matchReasons).toContain('specialty_match')
     })
 
-    it('Multi-Specialty Hospital matches any specialty request', () => {
+    it('Multi-Specialty Hospital does NOT match unrelated specialty', () => {
       const context: ProviderSearchContext = {
         specialty: 'dermatologist',
         city: 'Lagos',
       }
       const results = rankProviders(MOCK_PROVIDERS, context)
       const multiSpecialty = results.find(m => m.provider.id === 'p4')
-      expect(multiSpecialty?.matchReasons).toContain('specialty_match')
+      // Multi-Specialty Hospital specialty is "Multi-Specialty Hospital"
+      // — it does NOT contain "dermatology", so it should NOT get specialty_match
+      expect(multiSpecialty?.matchReasons).not.toContain('specialty_match')
     })
   })
 
@@ -329,6 +331,225 @@ describe('rankProviders', () => {
       for (let i = 1; i < results.length; i++) {
         expect(results[i - 1].score).toBeGreaterThanOrEqual(results[i].score)
       }
+    })
+  })
+
+  describe('area → city normalization', () => {
+    it('searching "Lekki" resolves to Lagos providers', () => {
+      const context: ProviderSearchContext = {
+        area: 'Lekki',
+      }
+      const results = rankProviders(MOCK_PROVIDERS, context)
+      const cities = results.map(m => m.provider.location.city)
+      expect(cities).not.toContain('Abuja')
+      expect(results.length).toBeGreaterThan(0)
+    })
+
+    it('searching "Wuse" resolves to Abuja providers', () => {
+      const context: ProviderSearchContext = {
+        area: 'Wuse',
+      }
+      const results = rankProviders(MOCK_PROVIDERS, context)
+      const cities = results.map(m => m.provider.location.city)
+      expect(cities).toContain('Abuja')
+      expect(cities).not.toContain('Lagos')
+    })
+
+    it('area match narrows to specific providers when available', () => {
+      const context: ProviderSearchContext = {
+        specialty: 'dermatologist',
+        area: 'Lekki',
+      }
+      const results = rankProviders(MOCK_PROVIDERS, context)
+      // Should find the Lekki dermatology clinic
+      expect(results[0].provider.id).toBe('p1')
+      expect(results[0].matchReasons).toContain('location_match')
+    })
+  })
+
+  describe('match reasons — lower_cost and high_rating', () => {
+    it('low-cost provider gets lower_cost reason', () => {
+      const cheap: Provider = {
+        id: 'cheap',
+        name: 'Cheap Dermatology',
+        type: 'clinic',
+        specialty: 'Dermatology',
+        location: { city: 'Lagos', area: 'Lekki', address: '123 Test' },
+        availability: 'available',
+        acceptedInsurance: [],
+        consultationFee: 5000,
+        rating: 4.0,
+      }
+      const context: ProviderSearchContext = { specialty: 'dermatologist', city: 'Lagos' }
+      const results = rankProviders([cheap], context)
+      expect(results[0].matchReasons).toContain('lower_cost')
+    })
+
+    it('high-rated provider gets high_rating reason', () => {
+      const highRated: Provider = {
+        id: 'high',
+        name: 'High Rated Dermatology',
+        type: 'clinic',
+        specialty: 'Dermatology',
+        location: { city: 'Lagos', area: 'Lekki', address: '123 Test' },
+        availability: 'available',
+        acceptedInsurance: [],
+        consultationFee: 25000,
+        rating: 4.8,
+      }
+      const context: ProviderSearchContext = { specialty: 'dermatologist', city: 'Lagos' }
+      const results = rankProviders([highRated], context)
+      expect(results[0].matchReasons).toContain('high_rating')
+    })
+
+    it('expensive provider does NOT get lower_cost', () => {
+      const expensive: Provider = {
+        id: 'exp',
+        name: 'Expensive Dermatology',
+        type: 'clinic',
+        specialty: 'Dermatology',
+        location: { city: 'Lagos', area: 'Lekki', address: '123 Test' },
+        availability: 'available',
+        acceptedInsurance: [],
+        consultationFee: 45000,
+        rating: 4.0,
+      }
+      const context: ProviderSearchContext = { specialty: 'dermatologist', city: 'Lagos' }
+      const results = rankProviders([expensive], context)
+      expect(results[0].matchReasons).not.toContain('lower_cost')
+    })
+
+    it('average-rated provider does NOT get high_rating', () => {
+      const avg: Provider = {
+        id: 'avg',
+        name: 'Average Dermatology',
+        type: 'clinic',
+        specialty: 'Dermatology',
+        location: { city: 'Lagos', area: 'Lekki', address: '123 Test' },
+        availability: 'available',
+        acceptedInsurance: [],
+        consultationFee: 25000,
+        rating: 4.2,
+      }
+      const context: ProviderSearchContext = { specialty: 'dermatologist', city: 'Lagos' }
+      const results = rankProviders([avg], context)
+      expect(results[0].matchReasons).not.toContain('high_rating')
+    })
+  })
+
+  describe('nearby match reason', () => {
+    it('provider within 10km gets nearby reason', () => {
+      const close: Provider = {
+        id: 'close',
+        name: 'Close Clinic',
+        type: 'clinic',
+        specialty: 'Dermatology',
+        location: { city: 'Lagos', area: 'Lekki', address: '123 Test', coordinates: { lat: 6.4470, lng: 3.4550 } },
+        availability: 'available',
+        acceptedInsurance: [],
+        consultationFee: 25000,
+        rating: 4.0,
+      }
+      const context: ProviderSearchContext = {
+        specialty: 'dermatologist',
+        city: 'Lagos',
+        userCoordinates: { lat: 6.4480, lng: 3.4560 },
+      }
+      const results = rankProviders([close], context)
+      expect(results[0].matchReasons).toContain('nearby')
+    })
+
+    it('provider >10km away does NOT get nearby reason', () => {
+      const far: Provider = {
+        id: 'far',
+        name: 'Far Clinic',
+        type: 'clinic',
+        specialty: 'Dermatology',
+        location: { city: 'Lagos', area: 'Ikeja', address: '456 Test', coordinates: { lat: 6.6000, lng: 3.3500 } },
+        availability: 'available',
+        acceptedInsurance: [],
+        consultationFee: 25000,
+        rating: 4.0,
+      }
+      const context: ProviderSearchContext = {
+        specialty: 'dermatologist',
+        city: 'Lagos',
+        userCoordinates: { lat: 6.4470, lng: 3.4550 },
+      }
+      const results = rankProviders([far], context)
+      expect(results[0].matchReasons).not.toContain('nearby')
+    })
+  })
+
+  describe('multi-specialty hospital — specialty matching', () => {
+    it('Multi-Specialty Hospital does NOT get specialty_match for unrelated specialty', () => {
+      const multi: Provider = {
+        id: 'multi',
+        name: 'Multi Hospital',
+        type: 'hospital',
+        specialty: 'Multi-Specialty Hospital',
+        location: { city: 'Lagos', area: 'Victoria Island', address: '8 Test' },
+        availability: 'available',
+        acceptedInsurance: [],
+        consultationFee: 20000,
+        rating: 4.5,
+      }
+      const context: ProviderSearchContext = { specialty: 'dermatologist', city: 'Lagos' }
+      const results = rankProviders([multi], context)
+      expect(results[0].matchReasons).not.toContain('specialty_match')
+    })
+
+    it('provider with explicit specialty match gets specialty_match', () => {
+      const derm: Provider = {
+        id: 'derm',
+        name: 'Dermatology Clinic',
+        type: 'clinic',
+        specialty: 'Dermatology',
+        location: { city: 'Lagos', area: 'Lekki', address: '123 Test' },
+        availability: 'available',
+        acceptedInsurance: [],
+        consultationFee: 20000,
+        rating: 4.5,
+      }
+      const context: ProviderSearchContext = { specialty: 'dermatologist', city: 'Lagos' }
+      const results = rankProviders([derm], context)
+      expect(results[0].matchReasons).toContain('specialty_match')
+    })
+  })
+
+  describe('general practice matches all provider types', () => {
+    it('general_practice request accepts clinic', () => {
+      const clinic: Provider = {
+        id: 'clinic1',
+        name: 'General Clinic',
+        type: 'clinic',
+        specialty: 'General Practice',
+        location: { city: 'Lagos', area: 'Lekki', address: '123 Test' },
+        availability: 'available',
+        acceptedInsurance: [],
+        consultationFee: 10000,
+        rating: 4.0,
+      }
+      const context: ProviderSearchContext = { specialty: 'general_practice', city: 'Lagos' }
+      const results = rankProviders([clinic], context)
+      expect(results[0].matchReasons).toContain('provider_type_match')
+    })
+
+    it('general_practice request accepts hospital', () => {
+      const hospital: Provider = {
+        id: 'hosp1',
+        name: 'General Hospital',
+        type: 'hospital',
+        specialty: 'General Practice',
+        location: { city: 'Lagos', area: 'Lekki', address: '123 Test' },
+        availability: 'available',
+        acceptedInsurance: [],
+        consultationFee: 10000,
+        rating: 4.0,
+      }
+      const context: ProviderSearchContext = { specialty: 'general_practice', city: 'Lagos' }
+      const results = rankProviders([hospital], context)
+      expect(results[0].matchReasons).toContain('provider_type_match')
     })
   })
 })

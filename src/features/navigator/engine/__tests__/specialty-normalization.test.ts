@@ -114,10 +114,14 @@ describe('isSpecialtyMatch', () => {
     expect(isSpecialtyMatch('heart doctor', 'Cardiology')).toBe(true)
   })
 
-  it('Multi-Specialty Hospital matches any requested specialty', () => {
-    expect(isSpecialtyMatch('dermatologist', 'Multi-Specialty Hospital')).toBe(true)
-    expect(isSpecialtyMatch('cardiologist', 'Multi-Specialty Hospital')).toBe(true)
-    expect(isSpecialtyMatch('general doctor', 'Multi-Specialty Hospital')).toBe(true)
+  it('Multi-Specialty Hospital does NOT match unrelated specialties', () => {
+    expect(isSpecialtyMatch('dermatologist', 'Multi-Specialty Hospital')).toBe(false)
+    expect(isSpecialtyMatch('cardiologist', 'Multi-Specialty Hospital')).toBe(false)
+  })
+
+  it('Multi-Specialty Hospital matches only if specialty is explicitly listed', () => {
+    // A provider listing "Dermatology / Multi-Specialty Hospital" would match
+    expect(isSpecialtyMatch('dermatologist', 'Dermatology / Multi-Specialty Hospital')).toBe(true)
   })
 
   it('does not match dermatologist request to Cardiology provider', () => {

@@ -30,6 +30,7 @@ const SPECIALTY_MAP: Record<string, string> = {
 
   // General Practice / Primary Care
   'general doctor': 'General Practice',
+  'general practice': 'General Practice',
   'primary care doctor': 'General Practice',
   'primary care': 'General Practice',
   'family doctor': 'Family Medicine',
@@ -119,7 +120,7 @@ const SPECIALTY_ALIASES: Record<string, string> = {
  * Does NOT infer specialties from symptoms.
  */
 export function normalizeSpecialty(userInput: string): string {
-  const lower = userInput.toLowerCase().trim()
+  const lower = userInput.toLowerCase().trim().replace(/_/g, ' ')
 
   // Direct match from specialty map
   if (SPECIALTY_MAP[lower]) {
@@ -137,7 +138,7 @@ export function normalizeSpecialty(userInput: string): string {
 
 /**
  * Checks if two specialties are a match.
- * Multi-Specialty Hospital matches any requested specialty.
+ * Provider specialty must explicitly contain the requested specialty.
  */
 export function isSpecialtyMatch(
   requestedSpecialty: string,
@@ -146,11 +147,6 @@ export function isSpecialtyMatch(
   const normalized = normalizeSpecialty(requestedSpecialty)
   const providerNorm = providerSpecialty.toLowerCase().trim()
 
-  // Multi-Specialty Hospital matches any requested specialty
-  if (providerNorm.includes('multi-specialty') || providerNorm.includes('multi specialty')) {
-    return true
-  }
-
   // General Consultation matches general/family requests
   if (providerNorm.includes('general consultation')) {
     if (normalized === 'General Practice' || normalized === 'Family Medicine') {
@@ -158,6 +154,6 @@ export function isSpecialtyMatch(
     }
   }
 
-  // Direct match
+  // Direct match — provider specialty must explicitly contain the requested specialty
   return providerNorm.includes(normalized.toLowerCase())
 }

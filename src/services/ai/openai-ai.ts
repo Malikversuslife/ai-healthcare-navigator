@@ -10,6 +10,9 @@ interface APIResponse {
     severity: { value?: number; description?: string } | null
     functionalImpact: { level?: 'none' | 'mild' | 'significant'; description?: string } | null
     symptomTrend: 'improving' | 'stable' | 'worsening' | 'rapidly_worsening' | 'unknown' | null
+    specialty: string | null
+    location: string | null
+    insurance: string | null
   }
   followUpQuestion: string | null
 }
@@ -83,6 +86,15 @@ export class OpenAIAIService implements AIService {
       }
       if (data.extractedContext.symptomTrend) {
         extractedContext.symptomTrend = data.extractedContext.symptomTrend
+      }
+      if (data.extractedContext.specialty) {
+        extractedContext.specialty = data.extractedContext.specialty
+      }
+      if (data.extractedContext.location) {
+        extractedContext.location = data.extractedContext.location
+      }
+      if (data.extractedContext.insurance) {
+        extractedContext.insurance = data.extractedContext.insurance
       }
 
       return {

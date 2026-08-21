@@ -16,7 +16,10 @@ Your job is to:
 4. Extract severity as a number (1-10) if provided, or as a description (mild/moderate/severe) if provided
 5. If the user describes how their symptoms affect daily activities, extract functional impact
 6. If the user describes how symptoms are changing over time, extract symptom trend
-7. Ask one follow-up question at a time to gather missing information
+7. Extract specialty ONLY when the user explicitly states a specialty or provider type (e.g., "I need a dermatologist", "looking for a cardiologist")
+8. Extract location ONLY when the user explicitly states a city, area, or neighborhood (e.g., "in Lagos", "in Lekki", "in Abuja")
+9. Extract insurance ONLY when the user explicitly states an insurance plan or HMO (e.g., "I have NHIS", "with Leadway insurance")
+10. Ask one follow-up question at a time to gather missing information
 
 Duration: Preserve exactly what the user says (e.g., "about 18 hours", "since yesterday", "a few weeks")
 
@@ -25,6 +28,12 @@ Severity: If user provides a number, use { "value": N }. If user provides a desc
 Functional impact: ONLY extract when the user explicitly describes impact on daily activities (e.g., "I can't go to work", "I can't sleep", "I can't do my normal activities"). Do NOT infer from severity or duration.
 
 Symptom trend: ONLY extract when the user explicitly describes how symptoms are changing (e.g., "it's getting worse quickly", "it's improving", "it's been the same"). Do NOT infer from severity or duration.
+
+Specialty: ONLY extract when user explicitly mentions a specialty name (dermatologist, cardiologist, pediatrician, etc.) or provider type. Do NOT infer specialty from symptoms. "I have a rash" does NOT produce specialty. "I need a dermatologist" DOES produce specialty.
+
+Location: ONLY extract when user explicitly mentions a city, area, or neighborhood name. Do NOT infer location from other context.
+
+Insurance: ONLY extract when user explicitly mentions an insurance plan, HMO, or provider name. Do NOT infer insurance status.
 
 Be conversational but efficient. Ask only what's missing. Never ask for information already provided.`
 
@@ -85,8 +94,20 @@ const EXTRACTION_SCHEMA = {
           enum: ['improving', 'stable', 'worsening', 'rapidly_worsening', 'unknown'],
           description: 'Symptom trend — ONLY when user explicitly describes how symptoms are changing. Do NOT infer from severity or duration.',
         },
+        specialty: {
+          type: ['string', 'null'],
+          description: 'Medical specialty or provider type ONLY when user explicitly states it (e.g., "dermatologist", "cardiologist"). Do NOT infer from symptoms.',
+        },
+        location: {
+          type: ['string', 'null'],
+          description: 'City, area, or neighborhood ONLY when user explicitly states it (e.g., "Lagos", "Lekki", "Abuja"). Do NOT infer from other context.',
+        },
+        insurance: {
+          type: ['string', 'null'],
+          description: 'Insurance plan, HMO, or provider ONLY when user explicitly states it (e.g., "NHIS", "Leadway"). Do NOT infer insurance status.',
+        },
       },
-      required: ['concern', 'symptoms', 'duration', 'severity', 'functionalImpact', 'symptomTrend'],
+      required: ['concern', 'symptoms', 'duration', 'severity', 'functionalImpact', 'symptomTrend', 'specialty', 'location', 'insurance'],
     },
     followUpQuestion: {
       type: ['string', 'null'],
@@ -105,6 +126,7 @@ interface NavigateRequest {
     severity?: { value?: number; description?: string }
     functionalImpact?: { level?: 'none' | 'mild' | 'significant'; description?: string }
     symptomTrend?: 'improving' | 'stable' | 'worsening' | 'rapidly_worsening' | 'unknown'
+    specialty?: string
     location?: string
     insurance?: string
   }
@@ -174,11 +196,14 @@ export async function handleNavigate(req: IncomingMessage, res: ServerResponse) 
 - Symptoms: ${context.symptoms.length > 0 ? context.symptoms.join(', ') : 'not provided'}
 - Duration: ${context.duration || 'not provided'}
 - Severity: ${context.severity ? JSON.stringify(context.severity) : 'not provided'}
+- Specialty: ${context.specialty || 'not provided'}
+- Location: ${context.location || 'not provided'}
+- Insurance: ${context.insurance || 'not provided'}
 - Missing information: ${missingFields.length > 0 ? missingFields.join(', ') : 'none'}
 
 User message: "${message}"
 
-Extract information from this message. Preserve the user's actual duration description.`
+Extract information from this message. Preserve the user's actual duration description. Extract specialty, location, and insurance ONLY when explicitly stated.`
 
     const client = new OpenAI({ apiKey })
 

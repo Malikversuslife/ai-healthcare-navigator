@@ -25,6 +25,9 @@ interface ExtractionResult {
   severity: Severity | null
   functionalImpact: FunctionalImpact | null
   symptomTrend: SymptomTrend | null
+  specialty: string | null
+  location: string | null
+  insurance: string | null
 }
 
 function extractConcern(message: string): string | null {
@@ -219,6 +222,89 @@ function extractSymptomTrend(message: string): SymptomTrend | null {
   return null
 }
 
+function extractSpecialty(message: string): string | null {
+  const lower = message.toLowerCase()
+
+  const specialtyPatterns = [
+    { pattern: /dermatolog/i, specialty: 'dermatologist' },
+    { pattern: /cardiolog/i, specialty: 'cardiologist' },
+    { pattern: /pediatr/i, specialty: 'pediatrician' },
+    { pattern: /neurolog/i, specialty: 'neurologist' },
+    { pattern: /orthoped/i, specialty: 'orthopedic surgeon' },
+    { pattern: /ophthalmolog/i, specialty: 'ophthalmologist' },
+    { pattern: /ENT|ear.?nose.?throat/i, specialty: 'ENT specialist' },
+    { pattern: /gynecolog|OB.?GYN/i, specialty: 'gynecologist' },
+    { pattern: /urolog/i, specialty: 'urologist' },
+    { pattern: /psychiatr/i, specialty: 'psychiatrist' },
+    { pattern: /psycholog/i, specialty: 'psychologist' },
+    { pattern: /dentist|dental/i, specialty: 'dentist' },
+    { pattern: /general.?pract|GP|primary.?care/i, specialty: 'general practice' },
+    { pattern: /internist|internal.?medicine/i, specialty: 'internal medicine' },
+    { pattern: /pulmonolog|lung/i, specialty: 'pulmonologist' },
+    { pattern: /gastroenterolog/i, specialty: 'gastroenterologist' },
+    { pattern: /endocrinolog|diabet/i, specialty: 'endocrinologist' },
+    { pattern: /nephrolog|kidney/i, specialty: 'nephrologist' },
+    { pattern: /rheumatolog/i, specialty: 'rheumatologist' },
+    { pattern: /oncolog|cancer/i, specialty: 'oncologist' },
+  ]
+
+  for (const { pattern, specialty } of specialtyPatterns) {
+    if (pattern.test(lower)) return specialty
+  }
+
+  return null
+}
+
+function extractLocation(message: string): string | null {
+  const lower = message.toLowerCase()
+
+  const locationPatterns = [
+    { pattern: /lagos/i, location: 'Lagos' },
+    { pattern: /abuja/i, location: 'Abuja' },
+    { pattern: /ibadan/i, location: 'Ibadan' },
+    { pattern: /port.?harcourt|PH/i, location: 'Port Harcourt' },
+    { pattern: /ilorin/i, location: 'Ilorin' },
+    { pattern: /lekki/i, location: 'Lekki' },
+    { pattern: /ikeja/i, location: 'Ikeja' },
+    { pattern: /victoria.?island|VI/i, location: 'Victoria Island' },
+    { pattern: /surulere/i, location: 'Surulere' },
+    { pattern: /yaba/i, location: 'Yaba' },
+    { pattern: /wuse/i, location: 'Wuse' },
+    { pattern: /maitama/i, location: 'Maitama' },
+    { pattern: /garki/i, location: 'Garki' },
+    { pattern: /jabi/i, location: 'Jabi' },
+  ]
+
+  for (const { pattern, location } of locationPatterns) {
+    if (pattern.test(lower)) return location
+  }
+
+  return null
+}
+
+function extractInsurance(message: string): string | null {
+  const lower = message.toLowerCase()
+
+  const insurancePatterns = [
+    { pattern: /NHIS|national.?health.?insurance/i, insurance: 'nhis' },
+    { pattern: /leadway/i, insurance: 'leadway' },
+    { pattern: /AXA.?Mansard|AXA/i, insurance: 'axa_mansard' },
+    { pattern: /hygeia/i, insurance: 'hygeia' },
+    { pattern: /clearline/i, insurance: 'clearline' },
+    { pattern: /stadler/i, insurance: 'stadler' },
+    { pattern: /total.?health.?trust|THT/i, insurance: 'total_health_trust' },
+    { pattern: /reliance.?HMO|reliance/i, insurance: 'reliance_hmo' },
+    { pattern: /loginso/i, insurance: 'loginso' },
+    { pattern: /aiico/i, insurance: 'aiico' },
+  ]
+
+  for (const { pattern, insurance } of insurancePatterns) {
+    if (pattern.test(lower)) return insurance
+  }
+
+  return null
+}
+
 function extractInformation(message: string): ExtractionResult {
   return {
     concern: extractConcern(message),
@@ -227,6 +313,9 @@ function extractInformation(message: string): ExtractionResult {
     severity: extractSeverity(message),
     functionalImpact: extractFunctionalImpact(message),
     symptomTrend: extractSymptomTrend(message),
+    specialty: extractSpecialty(message),
+    location: extractLocation(message),
+    insurance: extractInsurance(message),
   }
 }
 
@@ -293,6 +382,15 @@ export class MockAIService implements AIService {
     }
     if (extracted.symptomTrend !== null) {
       updatedContext.symptomTrend = extracted.symptomTrend
+    }
+    if (extracted.specialty !== null) {
+      updatedContext.specialty = extracted.specialty
+    }
+    if (extracted.location !== null) {
+      updatedContext.location = extracted.location
+    }
+    if (extracted.insurance !== null) {
+      updatedContext.insurance = extracted.insurance
     }
 
     // Get appropriate follow-up
