@@ -1,4 +1,9 @@
-export { containsEmergencyIndicators, determineIntentFromContext } from './safety'
-export type { SafetyResult } from './safety'
+export { evaluateEmergencySafety, determineIntentFromContext } from './safety'
+export type { SafetySignal, SafetySignalMatch, SafetyResult } from './safety'
 export { isContextSufficient, getMissingContextFields } from './context'
-export { evaluateNavigation, determineCareLevel, buildRecommendation } from './navigation'
+export {
+  evaluateNavigation,
+  determineCareLevel,
+  buildRecommendation,
+  buildEmergencyRecommendation,
+} from './navigation'

@@ -8,10 +8,11 @@ import {
   ConversationProgress,
   NavigationIntent,
   NavigationState,
+  SafetyResult,
 } from '../../../shared/types'
 import { generateId } from '../../../shared/utils'
 import { getAIService } from '../../../services/ai'
-import { evaluateNavigation, determineCareLevel, buildRecommendation } from '../engine'
+import { evaluateNavigation, evaluateEmergencySafety, buildEmergencyRecommendation, determineCareLevel, buildRecommendation } from '../engine'
 import { searchProviders } from './useProviderSearch'
 
 type ConversationAction =
@@ -26,6 +27,7 @@ type ConversationAction =
   | { type: 'UPDATE_PROGRESS'; progress: Partial<ConversationProgress> }
   | { type: 'SET_NAVIGATION_STATE'; state: NavigationState }
   | { type: 'SET_NAVIGATION_INTENT'; intent: NavigationIntent }
+  | { type: 'SET_SAFETY_RESULT'; result: SafetyResult }
   | { type: 'RESET' }
 
 const initialProgress: ConversationProgress = {
@@ -50,6 +52,7 @@ const initialState: ConversationState = {
   progress: initialProgress,
   navigationState: 'understanding',
   navigationIntent: 'general_healthcare',
+  safetyResult: null,
 }
 
 function calculateProgress(context: UserHealthContext): ConversationProgress {
@@ -94,6 +97,8 @@ function conversationReducer(
       return { ...state, navigationState: action.state }
     case 'SET_NAVIGATION_INTENT':
       return { ...state, navigationIntent: action.intent }
+    case 'SET_SAFETY_RESULT':
+      return { ...state, safetyResult: action.result }
     case 'RESET':
       return initialState
     default:
@@ -182,7 +187,27 @@ export function useConversation() {
 
       const updatedContext = { ...state.userContext, ...result.extractedContext }
 
-      // Application evaluates navigation (safety → context → action)
+      // Safety evaluation runs FIRST — before any navigation logic
+      const safetyResult = evaluateEmergencySafety(updatedContext)
+      dispatch({ type: 'SET_SAFETY_RESULT', result: safetyResult })
+
+      if (safetyResult.triggered) {
+        // Emergency interrupts normal flow — no further navigation evaluation
+        dispatch({ type: 'SET_NAVIGATION_STATE', state: 'emergency' })
+        dispatch({ type: 'SET_STEP', step: 'emergency' })
+
+        const recommendation = buildEmergencyRecommendation()
+        dispatch({ type: 'SET_RECOMMENDATION', recommendation })
+
+        addMessage('assistant', result.response, {
+          extractedContext: result.extractedContext,
+          recommendation,
+        })
+        dispatch({ type: 'SET_LOADING', isLoading: false })
+        return
+      }
+
+      // Normal navigation evaluation (only runs if no emergency)
       const navAction = evaluateNavigation({
         intent,
         state: state.navigationState,
@@ -192,10 +217,12 @@ export function useConversation() {
       // Handle each action type
       switch (navAction.type) {
         case 'emergency': {
+          // This should not happen if safety evaluation above is correct,
+          // but handle it defensively
           dispatch({ type: 'SET_NAVIGATION_STATE', state: 'emergency' })
-          dispatch({ type: 'SET_STEP', step: 'recommendation' })
+          dispatch({ type: 'SET_STEP', step: 'emergency' })
 
-          const recommendation = buildRecommendation(updatedContext, 'emergency')
+          const recommendation = buildEmergencyRecommendation()
           dispatch({ type: 'SET_RECOMMENDATION', recommendation })
 
           addMessage('assistant', result.response, {
@@ -209,9 +236,6 @@ export function useConversation() {
           dispatch({ type: 'SET_NAVIGATION_STATE', state: 'collecting_context' })
           dispatch({ type: 'SET_STEP', step: 'follow-up' })
 
-          // Application determines the follow-up question based on missing fields.
-          // The AI's conversational acknowledgement is NOT used to override
-          // which field the application needs to collect next.
           const appFollowUp = generateFollowUpPrompt(navAction.missingFields)
 
           addMessage('assistant', appFollowUp, {
@@ -223,7 +247,6 @@ export function useConversation() {
         case 'safety_check': {
           dispatch({ type: 'SET_NAVIGATION_STATE', state: 'safety_check' })
 
-          // Context sufficient for symptom navigation — determine care level
           const careLevel = determineCareLevel(updatedContext)
           const recommendation = buildRecommendation(updatedContext, careLevel)
 

@@ -159,7 +159,7 @@ describe('evaluateNavigation', () => {
         intent: 'symptom_navigation',
         state: 'recommendation',
         userContext: {
-          concern: 'stroke symptoms',
+          concern: 'sudden stroke symptoms',
           symptoms: ['stroke'],
           duration: '5 minutes',
         },

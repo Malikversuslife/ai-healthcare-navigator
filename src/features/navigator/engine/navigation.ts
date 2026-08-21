@@ -5,8 +5,10 @@ import {
   NavigationContext,
   NavigationAction,
 } from '../../../shared/types'
-import { containsEmergencyIndicators } from './safety'
+import { evaluateEmergencySafety } from './safety'
 import { isContextSufficient, getMissingContextFields } from './context'
+
+export { evaluateEmergencySafety }
 
 export function evaluateNavigation(
   navContext: NavigationContext
@@ -14,7 +16,7 @@ export function evaluateNavigation(
   const { intent, state, userContext } = navContext
 
   // Safety check is always evaluated first
-  const safety = containsEmergencyIndicators(userContext)
+  const safety = evaluateEmergencySafety(userContext)
   if (safety.triggered) {
     return { type: 'emergency' }
   }
@@ -78,13 +80,25 @@ export function evaluateNavigation(
   return { type: 'collect_context', missingFields: missing }
 }
 
+export function buildEmergencyRecommendation(): CareRecommendation {
+  return {
+    careLevel: 'emergency',
+    reasoning: 'What you\'ve described may need immediate medical attention.',
+    disclaimer: 'This tool cannot determine or rule out a medical emergency. This is not a medical diagnosis.',
+    nextSteps: [
+      { type: 'emergency', label: 'Call Emergency Services', description: 'Dial 112 immediately' },
+      { type: 'find-provider', label: 'Find Nearest Hospital', description: 'Locate an emergency room near you' },
+    ],
+  }
+}
+
+// STAGE 4A PLACEHOLDER — intentionally incomplete.
+// Care-level determination rules must NOT be invented here.
+// This function will be populated with clinically-grounded rules in Stage 4C.
+// Do not add severity thresholds, symptom-based rules, or any medical logic.
+// For now, all paths return 'primary_care' as a safe placeholder that
+// directs the user to a healthcare provider without making medical claims.
 export function determineCareLevel(_context: UserHealthContext): CareLevel {
-  // STAGE 4A PLACEHOLDER — intentionally incomplete.
-  // Care-level determination rules must NOT be invented here.
-  // This function will be populated with clinically-grounded rules in Stage 4B.
-  // Do not add severity thresholds, symptom-based rules, or any medical logic.
-  // For now, all paths return 'primary_care' as a safe placeholder that
-  // directs the user to a healthcare provider without making medical claims.
   return 'primary_care'
 }
 
@@ -94,8 +108,8 @@ export function buildRecommendation(
 ): CareRecommendation {
   const recommendations: Record<CareLevel, Omit<CareRecommendation, 'careLevel'>> = {
     emergency: {
-      reasoning: 'Based on the severity of your symptoms, you should seek immediate emergency care.',
-      disclaimer: 'This is not a medical diagnosis. If you are experiencing a medical emergency, please call 112 or go to the nearest emergency room immediately.',
+      reasoning: 'What you\'ve described may need immediate medical attention.',
+      disclaimer: 'This tool cannot determine or rule out a medical emergency. This is not a medical diagnosis.',
       nextSteps: [
         { type: 'emergency', label: 'Call Emergency Services', description: 'Dial 112 immediately' },
         { type: 'find-provider', label: 'Find Nearest Hospital', description: 'Locate an emergency room near you' },

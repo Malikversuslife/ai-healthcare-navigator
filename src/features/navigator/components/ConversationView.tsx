@@ -4,6 +4,7 @@ import { Message } from '../../../shared/types'
 import { useConversation } from '../hooks/useConversation'
 import MessageBubble from './MessageBubble'
 import CareRecommendationCard from './CareRecommendation'
+import EmergencyAlert from './EmergencyAlert'
 import ProviderList from './ProviderList'
 import LocationPrompt from './LocationPrompt'
 import Spinner from '../../../shared/components/Spinner'
@@ -110,8 +111,15 @@ function ConversationView() {
               <LocationPrompt onLocationSelect={handleLocationSelect} />
             )}
 
-            {/* Care Recommendation */}
-            {state.recommendation && (
+            {/* Emergency Alert */}
+            {state.navigationState === 'emergency' && (
+              <EmergencyAlert
+                onFindEmergencyCare={() => findProviders()}
+              />
+            )}
+
+            {/* Care Recommendation (non-emergency) */}
+            {state.recommendation && state.navigationState !== 'emergency' && (
               <CareRecommendationCard
                 recommendation={state.recommendation}
                 onFindProviders={() => findProviders()}

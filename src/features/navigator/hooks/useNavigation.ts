@@ -1,8 +1,8 @@
-import { UserHealthContext, CareLevel, CareRecommendation, NavigationIntent, NavigationState, NavigationAction, NavigationContext } from '../../../shared/types'
-import { containsEmergencyIndicators as engineContainsEmergencyIndicators, isContextSufficient as engineIsContextSufficient, getMissingContextFields as engineGetMissingContextFields, evaluateNavigation as engineEvaluateNavigation, determineCareLevel as engineDetermineCareLevel, buildRecommendation as engineBuildRecommendation } from '../engine'
+import { UserHealthContext, CareLevel, CareRecommendation, NavigationIntent, NavigationState, NavigationAction, NavigationContext, SafetyResult } from '../../../shared/types'
+import { evaluateEmergencySafety as engineEvaluateEmergencySafety, isContextSufficient as engineIsContextSufficient, getMissingContextFields as engineGetMissingContextFields, evaluateNavigation as engineEvaluateNavigation, determineCareLevel as engineDetermineCareLevel, buildRecommendation as engineBuildRecommendation } from '../engine'
 
-export function containsEmergencyIndicators(context: UserHealthContext): boolean {
-  return engineContainsEmergencyIndicators(context).triggered
+export function evaluateEmergencySafety(context: UserHealthContext): SafetyResult {
+  return engineEvaluateEmergencySafety(context)
 }
 
 export function isContextSufficient(intent: NavigationIntent, context: UserHealthContext): boolean {
@@ -25,4 +25,4 @@ export function buildRecommendation(context: UserHealthContext, careLevel: CareL
   return engineBuildRecommendation(context, careLevel)
 }
 
-export type { NavigationIntent, NavigationState, NavigationAction, NavigationContext }
+export type { NavigationIntent, NavigationState, NavigationAction, NavigationContext, SafetyResult }

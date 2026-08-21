@@ -56,9 +56,26 @@ export interface NavigationContext {
   userContext: UserHealthContext
 }
 
+export type SafetySignal =
+  | 'airway_compromise'
+  | 'severe_breathing_difficulty'
+  | 'loss_of_consciousness'
+  | 'major_bleeding'
+  | 'severe_allergic_reaction'
+  | 'stroke_signs'
+  | 'high_risk_chest_symptoms'
+  | 'active_seizure'
+  | 'other_supported_emergency'
+
+export interface SafetySignalMatch {
+  signal: SafetySignal
+  matchedIndicators: string[]
+  source: 'concern' | 'symptom' | 'context'
+}
+
 export interface SafetyResult {
   triggered: boolean
-  indicators: string[]
+  signals: SafetySignalMatch[]
 }
 
 export interface Provider {
@@ -158,4 +175,5 @@ export interface ConversationState {
   progress: ConversationProgress
   navigationState: NavigationState
   navigationIntent: NavigationIntent
+  safetyResult: SafetyResult | null
 }
