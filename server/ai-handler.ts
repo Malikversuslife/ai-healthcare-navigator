@@ -14,11 +14,17 @@ Your job is to:
 2. Identify symptoms mentioned
 3. Preserve the user's actual duration description (do not convert to categories)
 4. Extract severity as a number (1-10) if provided, or as a description (mild/moderate/severe) if provided
-5. Ask one follow-up question at a time to gather missing information
+5. If the user describes how their symptoms affect daily activities, extract functional impact
+6. If the user describes how symptoms are changing over time, extract symptom trend
+7. Ask one follow-up question at a time to gather missing information
 
 Duration: Preserve exactly what the user says (e.g., "about 18 hours", "since yesterday", "a few weeks")
 
 Severity: If user provides a number, use { "value": N }. If user provides a description, use { "description": "word" }. Do not invent numerical values when the user did not provide them.
+
+Functional impact: ONLY extract when the user explicitly describes impact on daily activities (e.g., "I can't go to work", "I can't sleep", "I can't do my normal activities"). Do NOT infer from severity or duration.
+
+Symptom trend: ONLY extract when the user explicitly describes how symptoms are changing (e.g., "it's getting worse quickly", "it's improving", "it's been the same"). Do NOT infer from severity or duration.
 
 Be conversational but efficient. Ask only what's missing. Never ask for information already provided.`
 
@@ -59,8 +65,28 @@ const EXTRACTION_SCHEMA = {
           },
           description: 'Severity as number or description, not both',
         },
+        functionalImpact: {
+          type: ['object', 'null'],
+          properties: {
+            level: {
+              type: ['string', 'null'],
+              enum: ['none', 'mild', 'significant'],
+              description: 'Impact level ONLY if user explicitly describes impact on daily activities',
+            },
+            description: {
+              type: ['string', 'null'],
+              description: 'User\'s own description of impact',
+            },
+          },
+          description: 'Functional impact — ONLY when user explicitly describes inability to work or do daily activities. Do NOT infer from severity or duration.',
+        },
+        symptomTrend: {
+          type: ['string', 'null'],
+          enum: ['improving', 'stable', 'worsening', 'rapidly_worsening', 'unknown'],
+          description: 'Symptom trend — ONLY when user explicitly describes how symptoms are changing. Do NOT infer from severity or duration.',
+        },
       },
-      required: ['concern', 'symptoms', 'duration', 'severity'],
+      required: ['concern', 'symptoms', 'duration', 'severity', 'functionalImpact', 'symptomTrend'],
     },
     followUpQuestion: {
       type: ['string', 'null'],
@@ -77,6 +103,8 @@ interface NavigateRequest {
     symptoms: string[]
     duration: string
     severity?: { value?: number; description?: string }
+    functionalImpact?: { level?: 'none' | 'mild' | 'significant'; description?: string }
+    symptomTrend?: 'improving' | 'stable' | 'worsening' | 'rapidly_worsening' | 'unknown'
     location?: string
     insurance?: string
   }

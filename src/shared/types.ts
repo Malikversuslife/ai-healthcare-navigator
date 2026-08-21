@@ -147,14 +147,14 @@ export interface CoverageResult {
 }
 
 export interface CareRecommendation {
-  careLevel: CareLevel
+  pathway: CarePathway | 'emergency'
   reasoning: string
   disclaimer: string
   nextSteps: NextStep[]
 }
 
 export interface NextStep {
-  type: 'find-provider' | 'self-care' | 'emergency' | 'learn-more'
+  type: 'find-provider' | 'self-care' | 'emergency' | 'learn-more' | 'info'
   label: string
   description: string
 }

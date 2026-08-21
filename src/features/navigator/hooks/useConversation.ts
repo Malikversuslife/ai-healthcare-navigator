@@ -329,7 +329,6 @@ export function useConversation() {
 
   const findProviders = useCallback((location?: string) => {
     const filter = {
-      careLevel: state.recommendation?.careLevel,
       location: location || state.userContext.location,
       insurance: state.selectedInsurance || undefined,
     }
@@ -337,7 +336,7 @@ export function useConversation() {
     const providers = searchProviders(filter)
     dispatch({ type: 'SET_PROVIDERS', providers })
     dispatch({ type: 'SET_STEP', step: 'provider-search' })
-  }, [state.recommendation, state.userContext.location, state.selectedInsurance])
+  }, [state.userContext.location, state.selectedInsurance])
 
   const selectInsurance = useCallback((insuranceId: string) => {
     dispatch({ type: 'SET_INSURANCE', insuranceId: insuranceId })

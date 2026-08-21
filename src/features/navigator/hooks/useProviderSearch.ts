@@ -1,8 +1,7 @@
-import { Provider, CareLevel } from '../../../shared/types'
+import { Provider } from '../../../shared/types'
 import providersData from '../data/mock-providers.json'
 
 interface ProviderFilter {
-  careLevel?: CareLevel
   specialty?: string
   city?: string
   area?: string

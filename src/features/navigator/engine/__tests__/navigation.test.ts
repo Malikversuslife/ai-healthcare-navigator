@@ -409,7 +409,7 @@ describe('evaluateCarePathway', () => {
 })
 
 describe('buildPathwayRecommendation', () => {
-  it('builds primary_care recommendation', () => {
+  it('builds primary_care recommendation with pathway identity', () => {
     const result = evaluateCarePathway({
       intent: 'symptom_navigation',
       healthContext: {
@@ -419,12 +419,12 @@ describe('buildPathwayRecommendation', () => {
       },
     })
     const rec = buildPathwayRecommendation(result)
-    expect(rec.careLevel).toBe('primary_care')
+    expect(rec.pathway).toBe('primary_care')
     expect(rec.reasoning).toContain('primary care')
     expect(rec.disclaimer).toBeTruthy()
   })
 
-  it('builds prompt_medical_review recommendation', () => {
+  it('builds prompt_medical_review recommendation with pathway identity', () => {
     const result = evaluateCarePathway({
       intent: 'symptom_navigation',
       healthContext: {
@@ -435,11 +435,11 @@ describe('buildPathwayRecommendation', () => {
       },
     })
     const rec = buildPathwayRecommendation(result)
-    expect(rec.careLevel).toBe('urgent_care')
+    expect(rec.pathway).toBe('prompt_medical_review')
     expect(rec.reasoning).toContain('medical assessment')
   })
 
-  it('builds provider_or_specialist recommendation', () => {
+  it('builds provider_or_specialist recommendation with pathway identity', () => {
     const result = evaluateCarePathway({
       intent: 'find_provider',
       healthContext: {
@@ -450,11 +450,11 @@ describe('buildPathwayRecommendation', () => {
       },
     })
     const rec = buildPathwayRecommendation(result)
-    expect(rec.careLevel).toBe('primary_care')
+    expect(rec.pathway).toBe('provider_or_specialist')
     expect(rec.reasoning).toContain('healthcare professional')
   })
 
-  it('builds informational_navigation recommendation', () => {
+  it('builds informational_navigation recommendation with pathway identity', () => {
     const result = evaluateCarePathway({
       intent: 'general_healthcare',
       healthContext: {
@@ -464,16 +464,68 @@ describe('buildPathwayRecommendation', () => {
       },
     })
     const rec = buildPathwayRecommendation(result)
-    expect(rec.careLevel).toBe('primary_care')
+    expect(rec.pathway).toBe('informational_navigation')
     expect(rec.reasoning).toContain('information')
   })
 })
 
 describe('buildEmergencyRecommendation', () => {
-  it('builds emergency recommendation', () => {
+  it('builds emergency recommendation with pathway identity', () => {
     const rec = buildEmergencyRecommendation()
-    expect(rec.careLevel).toBe('emergency')
+    expect(rec.pathway).toBe('emergency')
     expect(rec.nextSteps.some(s => s.type === 'emergency')).toBe(true)
     expect(rec.disclaimer).toContain('not determine or rule out')
+  })
+})
+
+describe('pathway identity preservation', () => {
+  it('prompt_medical_review remains prompt_medical_review and is NOT converted to urgent_care', () => {
+    const result = evaluateCarePathway({
+      intent: 'symptom_navigation',
+      healthContext: {
+        concern: 'pain',
+        symptoms: ['pain'],
+        duration: '3 days',
+        symptomTrend: 'rapidly_worsening',
+      },
+    })
+    const rec = buildPathwayRecommendation(result)
+    expect(rec.pathway).toBe('prompt_medical_review')
+    expect(rec.pathway).not.toBe('urgent_care')
+  })
+
+  it('informational_navigation is NOT represented as primary_care', () => {
+    const result = evaluateCarePathway({
+      intent: 'general_healthcare',
+      healthContext: {
+        concern: '',
+        symptoms: [],
+        duration: '',
+      },
+    })
+    const rec = buildPathwayRecommendation(result)
+    expect(rec.pathway).toBe('informational_navigation')
+    expect(rec.pathway).not.toBe('primary_care')
+  })
+
+  it('provider_or_specialist is NOT represented as primary_care', () => {
+    const result = evaluateCarePathway({
+      intent: 'find_provider',
+      healthContext: {
+        concern: '',
+        symptoms: [],
+        duration: '',
+        specialty: 'cardiologist',
+      },
+    })
+    const rec = buildPathwayRecommendation(result)
+    expect(rec.pathway).toBe('provider_or_specialist')
+    expect(rec.pathway).not.toBe('primary_care')
+  })
+
+  it('emergency recommendation uses pathway emergency, not careLevel', () => {
+    const rec = buildEmergencyRecommendation()
+    expect(rec.pathway).toBe('emergency')
+    expect(rec).not.toHaveProperty('careLevel')
   })
 })

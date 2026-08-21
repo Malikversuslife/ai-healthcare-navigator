@@ -8,6 +8,8 @@ interface APIResponse {
     symptoms: string[]
     duration: string | null
     severity: { value?: number; description?: string } | null
+    functionalImpact: { level?: 'none' | 'mild' | 'significant'; description?: string } | null
+    symptomTrend: 'improving' | 'stable' | 'worsening' | 'rapidly_worsening' | 'unknown' | null
   }
   followUpQuestion: string | null
 }
@@ -69,6 +71,18 @@ export class OpenAIAIService implements AIService {
         if (severity.value !== undefined || severity.description) {
           extractedContext.severity = severity
         }
+      }
+      if (data.extractedContext.functionalImpact) {
+        const fi = data.extractedContext.functionalImpact
+        if (fi.level) {
+          extractedContext.functionalImpact = {
+            level: fi.level,
+            ...(fi.description && { description: fi.description }),
+          }
+        }
+      }
+      if (data.extractedContext.symptomTrend) {
+        extractedContext.symptomTrend = data.extractedContext.symptomTrend
       }
 
       return {
