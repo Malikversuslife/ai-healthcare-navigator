@@ -1,15 +1,15 @@
 export default function PhotoBreakSection() {
   return (
     <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
-      {/* Full-bleed photography — human moment */}
+      {/* Full-bleed photography — human moment, intentional crop */}
       <div className="absolute inset-0">
         <img
           src="/images/human-break.jpg"
           alt=""
-          className="w-full h-full object-cover object-center"
+          className="w-full h-full object-cover object-[center_25%] sm:object-center photo-warm"
         />
-        {/* Subtle overlay for text contrast */}
-        <div className="absolute inset-0 bg-ink-900/40" />
+        {/* Subtle overlay for text contrast — photograph remains dominant */}
+        <div className="absolute inset-0 bg-ink-900/35" />
       </div>
 
       {/* Content — minimal, quiet */}

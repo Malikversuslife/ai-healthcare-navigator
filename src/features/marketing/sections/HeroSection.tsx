@@ -2,29 +2,29 @@ import { Link } from 'react-router-dom'
 
 export default function HeroSection() {
   return (
-    <section className="relative min-h-screen flex flex-col overflow-hidden">
-      {/* Full-bleed photography */}
+    <section className="relative min-h-[105vh] lg:min-h-[110vh] flex flex-col overflow-hidden">
+      {/* Full-bleed photography — intentional crop for mobile */}
       <div className="absolute inset-0">
         <img
           src="/images/hero.jpg"
           alt=""
-          className="w-full h-full object-cover object-center"
+          className="w-full h-full object-cover object-[center_30%] sm:object-center photo-warm"
         />
-        {/* Subtle overlay for text contrast — not opaque, photograph remains visible */}
-        <div className="absolute inset-0 bg-gradient-to-r from-ink-900/80 via-ink-900/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-ink-900/60 via-transparent to-ink-900/20" />
+        {/* Subtle overlay for text contrast — photograph remains visible */}
+        <div className="absolute inset-0 bg-gradient-to-r from-ink-900/75 via-ink-900/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink-900/50 via-transparent to-ink-900/10" />
       </div>
 
-      {/* Content — integrated composition, not stacked */}
-      <div className="relative z-10 flex-1 flex flex-col section-container pt-28 sm:pt-32 pb-16">
-        <div className="flex-1 flex flex-col lg:flex-row items-start lg:items-center gap-8 lg:gap-16">
-          {/* Left: Headline + CTA */}
+      {/* Content — integrated composition */}
+      <div className="relative z-10 flex-1 flex flex-col section-container pt-32 sm:pt-36 lg:pt-40 pb-20 lg:pb-24">
+        <div className="flex-1 flex flex-col lg:flex-row items-start lg:items-center gap-10 lg:gap-20">
+          {/* Left: Headline + CTA — slightly reduced headline scale */}
           <div className="flex-1 max-w-2xl">
-            <h1 className="font-display text-hero text-bone-100 mb-6 text-balance leading-[0.95]">
+            <h1 className="font-display text-hero text-bone-100 mb-8 text-balance leading-[0.95]">
               Know where<br />
               <span className="italic text-aubergine-300">to go next.</span>
             </h1>
-            <p className="text-body-lg text-soft-stone-300 max-w-md mb-10 leading-relaxed">
+            <p className="text-body-lg text-soft-stone-300 max-w-md mb-12 leading-relaxed">
               When you're unsure what kind of care you need, Hanya helps you understand your options and find the right next step.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
@@ -44,7 +44,7 @@ export default function HeroSection() {
           </div>
 
           {/* Right: Floating product composition — conversation UI + context chips */}
-          <div className="flex-1 hidden lg:flex flex-col items-end gap-4 w-full max-w-lg">
+          <div className="flex-1 hidden lg:flex flex-col items-end gap-5 w-full max-w-lg">
             {/* Context chips — extremely restrained */}
             <div className="flex gap-3 mb-2">
               <div className="bg-ink-900/60 backdrop-blur-sm border border-soft-stone-100/10 rounded-full px-4 py-1.5 text-caption text-soft-stone-300">

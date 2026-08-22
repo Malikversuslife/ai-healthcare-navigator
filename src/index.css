@@ -45,6 +45,10 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  .photo-warm {
+    filter: saturate(1.05) contrast(1.02) brightness(0.98);
+  }
 }
 
 /* Scrollbar */

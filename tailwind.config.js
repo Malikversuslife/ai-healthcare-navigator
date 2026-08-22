@@ -64,7 +64,7 @@ export default {
         display: ['"Newsreader"', 'Georgia', '"Times New Roman"', 'serif'],
       },
       fontSize: {
-        'hero': ['clamp(3rem, 6vw, 5.5rem)', { lineHeight: '1.05', fontWeight: '400' }],
+        'hero': ['clamp(2.75rem, 5.5vw, 5rem)', { lineHeight: '1.05', fontWeight: '400' }],
         'display-xl': ['clamp(2.5rem, 5vw, 4.5rem)', { lineHeight: '1.1', fontWeight: '400' }],
         'display': ['clamp(2rem, 4vw, 3.5rem)', { lineHeight: '1.15', fontWeight: '400' }],
         'display-sm': ['clamp(1.5rem, 3vw, 2.5rem)', { lineHeight: '1.2', fontWeight: '400' }],
