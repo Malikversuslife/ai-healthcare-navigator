@@ -16,7 +16,7 @@ Your job is to:
 4. Extract severity as a number (1-10) if provided, or as a description (mild/moderate/severe) if provided
 5. If the user describes how their symptoms affect daily activities, extract functional impact
 6. If the user describes how symptoms are changing over time, extract symptom trend
-7. Extract specialty ONLY when the user explicitly states a specialty or provider type (e.g., "I need a dermatologist", "looking for a cardiologist")
+7. Extract specialty ONLY when the user explicitly states a specialty or provider type (e.g., "I need a dermatologist", "looking for a cardiologist", "I need to see an eye doctor")
 8. Extract location ONLY when the user explicitly states a city, area, or neighborhood (e.g., "in Lagos", "in Lekki", "in Abuja")
 9. Extract insurance ONLY when the user explicitly states an insurance plan or HMO (e.g., "I have NHIS", "with Leadway insurance")
 10. Ask one follow-up question at a time to gather missing information
@@ -29,7 +29,7 @@ Functional impact: ONLY extract when the user explicitly describes impact on dai
 
 Symptom trend: ONLY extract when the user explicitly describes how symptoms are changing (e.g., "it's getting worse quickly", "it's improving", "it's been the same"). Do NOT infer from severity or duration.
 
-Specialty: ONLY extract when user explicitly mentions a specialty name (dermatologist, cardiologist, pediatrician, etc.) or provider type. Do NOT infer specialty from symptoms. "I have a rash" does NOT produce specialty. "I need a dermatologist" DOES produce specialty.
+Specialty: ONLY extract when user explicitly mentions a specialty name (dermatologist, cardiologist, pediatrician, etc.) or provider type including colloquial terms (e.g., "eye doctor" → ophthalmologist). Do NOT infer specialty from symptoms. "I have a rash" does NOT produce specialty. "I need a dermatologist" DOES produce specialty. "I need to see an eye doctor" DOES produce specialty.
 
 Location: ONLY extract when user explicitly mentions a city, area, or neighborhood name. Do NOT infer location from other context.
 
@@ -39,6 +39,7 @@ Be conversational but efficient. Ask only what's missing. Never ask for informat
 
 const EXTRACTION_SCHEMA = {
   type: 'object' as const,
+  additionalProperties: false,
   properties: {
     response: {
       type: 'string',
@@ -46,6 +47,7 @@ const EXTRACTION_SCHEMA = {
     },
     extractedContext: {
       type: 'object',
+      additionalProperties: false,
       properties: {
         concern: {
           type: ['string', 'null'],
@@ -62,6 +64,8 @@ const EXTRACTION_SCHEMA = {
         },
         severity: {
           type: ['object', 'null'],
+          additionalProperties: false,
+          required: ['value', 'description'],
           properties: {
             value: {
               type: ['number', 'null'],
@@ -76,6 +80,8 @@ const EXTRACTION_SCHEMA = {
         },
         functionalImpact: {
           type: ['object', 'null'],
+          additionalProperties: false,
+          required: ['level', 'description'],
           properties: {
             level: {
               type: ['string', 'null'],

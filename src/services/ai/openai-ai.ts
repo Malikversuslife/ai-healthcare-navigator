@@ -1,5 +1,6 @@
 import { UserHealthContext, Severity } from '../../shared/types'
 import { AIService, AIExtractionResult } from './types'
+import { MockAIService } from './mock-ai'
 
 interface APIResponse {
   response: string
@@ -19,9 +20,11 @@ interface APIResponse {
 
 export class OpenAIAIService implements AIService {
   private apiEndpoint: string
+  private fallbackService: MockAIService
 
   constructor() {
     this.apiEndpoint = '/api/ai/navigate'
+    this.fallbackService = new MockAIService()
   }
 
   async processMessage(
@@ -106,11 +109,8 @@ export class OpenAIAIService implements AIService {
     } catch (error) {
       console.error('AI service error:', error)
 
-      // Fallback to a safe default response
-      return {
-        response: 'I apologize, but I encountered an error processing your message. Could you please rephrase or try again?',
-        extractedContext: {},
-      }
+      // Fallback to client-side extraction when API is unavailable
+      return this.fallbackService.processMessage(message, context)
     }
   }
 }

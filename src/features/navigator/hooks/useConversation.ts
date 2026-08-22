@@ -114,7 +114,10 @@ function detectIntent(content: string): NavigationIntent {
   if (lower.includes('appointment') || lower.includes('book') || lower.includes('schedule')) {
     return 'appointment'
   }
-  if (lower.includes('find') && (lower.includes('doctor') || lower.includes('provider') || lower.includes('specialist') || lower.includes('clinic'))) {
+  if (
+    (lower.includes('find') || lower.includes('need') || lower.includes('want') || lower.includes('looking')) &&
+    (lower.includes('doctor') || lower.includes('provider') || lower.includes('specialist') || lower.includes('clinic'))
+  ) {
     return 'find_provider'
   }
   if (lower.includes('find') && lower.includes('hospital')) {
@@ -194,8 +197,18 @@ export function useConversation() {
       const result = await aiService.processMessage(content, state.userContext)
 
       // Application merges extracted context
+      // Filter null values — AI may return null for unextracted fields,
+      // which would corrupt context (null !== undefined passes field-detection checks)
       if (result.extractedContext) {
-        dispatch({ type: 'UPDATE_CONTEXT', context: result.extractedContext })
+        const clean: Partial<UserHealthContext> = {}
+        for (const [key, value] of Object.entries(result.extractedContext)) {
+          if (value !== null && value !== undefined) {
+            ;(clean as Record<string, unknown>)[key] = value
+          }
+        }
+        if (Object.keys(clean).length > 0) {
+          dispatch({ type: 'UPDATE_CONTEXT', context: clean })
+        }
       }
 
       const updatedContext = { ...state.userContext, ...result.extractedContext }

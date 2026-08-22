@@ -232,6 +232,7 @@ function extractSpecialty(message: string): string | null {
     { pattern: /neurolog/i, specialty: 'neurologist' },
     { pattern: /orthoped/i, specialty: 'orthopedic surgeon' },
     { pattern: /ophthalmolog/i, specialty: 'ophthalmologist' },
+    { pattern: /eye doctor/i, specialty: 'ophthalmologist' },
     { pattern: /ENT|ear.?nose.?throat/i, specialty: 'ENT specialist' },
     { pattern: /gynecolog|OB.?GYN/i, specialty: 'gynecologist' },
     { pattern: /urolog/i, specialty: 'urologist' },
