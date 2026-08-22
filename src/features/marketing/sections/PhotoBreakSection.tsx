@@ -1,21 +1,25 @@
 export default function PhotoBreakSection() {
   return (
-    <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden">
-      {/* Full-bleed photography placeholder */}
-      {/* Required: Contemporary Nigerian person in a quiet everyday moment — */}
-      {/* sitting on a couch, looking at phone, warm natural light from a window. */}
-      {/* NOT a hospital. NOT a clinical setting. NOT stock corporate. */}
-      <div className="absolute inset-0 bg-gradient-to-br from-soft-stone-200 via-bone-200 to-aubergine-100" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_40%,rgba(90,45,95,0.08),transparent_60%)]" />
+    <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
+      {/* Full-bleed photography — human moment */}
+      <div className="absolute inset-0">
+        <img
+          src="/images/human-break.jpg"
+          alt=""
+          className="w-full h-full object-cover object-center"
+        />
+        {/* Subtle overlay for text contrast */}
+        <div className="absolute inset-0 bg-ink-900/40" />
+      </div>
 
-      {/* Content */}
-      <div className="relative z-10 text-center px-5">
-        <h2 className="font-display text-display-xl text-ink-900 text-balance">
+      {/* Content — minimal, quiet */}
+      <div className="relative z-10 text-center px-5 max-w-2xl">
+        <h2 className="font-display text-display-xl text-bone-100 text-balance">
           Healthcare decisions<br />
-          <span className="italic text-aubergine-600">happen everywhere.</span>
+          <span className="italic text-aubergine-300">happen everywhere.</span>
         </h2>
-        <p className="text-body-lg text-ink-500 mt-6 max-w-md mx-auto">
-          Not just in hospitals. In living rooms. On commutes. In quiet moments when something doesn't feel right.
+        <p className="text-body-lg text-soft-stone-200 mt-6">
+          Not just in hospitals.
         </p>
       </div>
     </section>

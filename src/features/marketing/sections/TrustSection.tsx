@@ -34,7 +34,7 @@ export default function TrustSection() {
           <span className="italic text-aubergine-600">can trust.</span>
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-10">
           {PRINCIPLES.map((p) => (
             <div key={p.title}>
               <h3 className="text-body font-semibold text-ink-900 mb-2">{p.title}</h3>
