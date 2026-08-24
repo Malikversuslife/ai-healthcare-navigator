@@ -1,4 +1,4 @@
-import { useReducer, useCallback } from 'react'
+import { useReducer, useCallback, useRef } from 'react'
 import {
   ConversationState,
   ConversationStep,
@@ -154,6 +154,7 @@ function generateFollowUpPrompt(missingFields: string[]): string {
 
 export function useConversation() {
   const [state, dispatch] = useReducer(conversationReducer, initialState)
+  const sendingRef = useRef(false)
 
   const addMessage = useCallback((role: 'user' | 'assistant', content: string, metadata?: Message['metadata']) => {
     const message: Message = {
@@ -178,6 +179,9 @@ export function useConversation() {
   }, [state.userContext.location, state.userContext.specialty, state.selectedInsurance])
 
   const sendMessage = useCallback(async (content: string) => {
+    if (sendingRef.current) return
+    sendingRef.current = true
+
     addMessage('user', content)
     dispatch({ type: 'SET_LOADING', isLoading: true })
 
@@ -199,8 +203,8 @@ export function useConversation() {
       // Application merges extracted context
       // Filter null values — AI may return null for unextracted fields,
       // which would corrupt context (null !== undefined passes field-detection checks)
+      const clean: Partial<UserHealthContext> = {}
       if (result.extractedContext) {
-        const clean: Partial<UserHealthContext> = {}
         for (const [key, value] of Object.entries(result.extractedContext)) {
           if (value !== null && value !== undefined) {
             ;(clean as Record<string, unknown>)[key] = value
@@ -211,7 +215,9 @@ export function useConversation() {
         }
       }
 
-      const updatedContext = { ...state.userContext, ...result.extractedContext }
+      // Build updated context from current state + cleaned extraction
+      // (not from stale closure state — dispatch above updates state.userContext asynchronously)
+      const updatedContext = { ...state.userContext, ...clean }
 
       // Stage 4B: Safety evaluation runs FIRST — before any navigation logic
       const safetyResult = evaluateEmergencySafety(updatedContext)
@@ -225,8 +231,8 @@ export function useConversation() {
         const recommendation = buildEmergencyRecommendation()
         dispatch({ type: 'SET_RECOMMENDATION', recommendation })
 
-        addMessage('assistant', result.response, {
-          extractedContext: result.extractedContext,
+        addMessage('assistant', 'This could be a medical emergency. Please call emergency services (112) immediately or go to the nearest emergency room.', {
+          extractedContext: clean,
           recommendation,
         })
         dispatch({ type: 'SET_LOADING', isLoading: false })
@@ -250,8 +256,8 @@ export function useConversation() {
           const recommendation = buildEmergencyRecommendation()
           dispatch({ type: 'SET_RECOMMENDATION', recommendation })
 
-          addMessage('assistant', result.response, {
-            extractedContext: result.extractedContext,
+          addMessage('assistant', 'This could be a medical emergency. Please call emergency services (112) immediately or go to the nearest emergency room.', {
+            extractedContext: clean,
             recommendation,
           })
           break
@@ -264,7 +270,7 @@ export function useConversation() {
           const appFollowUp = generateFollowUpPrompt(navAction.missingFields)
 
           addMessage('assistant', appFollowUp, {
-            extractedContext: result.extractedContext,
+            extractedContext: clean,
           })
           break
         }
@@ -284,7 +290,7 @@ export function useConversation() {
           dispatch({ type: 'SET_STEP', step: 'recommendation' })
 
           addMessage('assistant', result.response, {
-            extractedContext: result.extractedContext,
+            extractedContext: clean,
             recommendation,
           })
           break
@@ -293,7 +299,7 @@ export function useConversation() {
         case 'show_recommendation': {
           dispatch({ type: 'SET_STEP', step: 'recommendation' })
           addMessage('assistant', result.response, {
-            extractedContext: result.extractedContext,
+            extractedContext: clean,
             recommendation: state.recommendation ?? undefined,
           })
           break
@@ -308,7 +314,7 @@ export function useConversation() {
           runProviderSearch({ specialty })
 
           addMessage('assistant', result.response, {
-            extractedContext: result.extractedContext,
+            extractedContext: clean,
           })
           break
         }
@@ -318,7 +324,7 @@ export function useConversation() {
           dispatch({ type: 'SET_STEP', step: 'coverage' })
 
           addMessage('assistant', result.response, {
-            extractedContext: result.extractedContext,
+            extractedContext: clean,
           })
           break
         }
@@ -328,7 +334,7 @@ export function useConversation() {
           dispatch({ type: 'SET_STEP', step: 'intake' })
 
           addMessage('assistant', result.response, {
-            extractedContext: result.extractedContext,
+            extractedContext: clean,
           })
           break
         }
@@ -338,14 +344,14 @@ export function useConversation() {
           dispatch({ type: 'SET_STEP', step: 'complete' })
 
           addMessage('assistant', result.response, {
-            extractedContext: result.extractedContext,
+            extractedContext: clean,
           })
           break
         }
 
         case 'complete': {
           addMessage('assistant', result.response, {
-            extractedContext: result.extractedContext,
+            extractedContext: clean,
           })
           break
         }
@@ -353,14 +359,16 @@ export function useConversation() {
     } catch {
       addMessage('assistant', 'I apologize, but I encountered an error. Please try again.')
     } finally {
+      sendingRef.current = false
       dispatch({ type: 'SET_LOADING', isLoading: false })
     }
   }, [state.userContext, state.navigationState, state.recommendation, state.selectedInsurance, addMessage, runProviderSearch])
 
   const findProviders = useCallback((location?: string) => {
     const city = location || state.userContext.location
-    runProviderSearch({ city })
+    dispatch({ type: 'SET_NAVIGATION_STATE', state: 'provider_search' })
     dispatch({ type: 'SET_STEP', step: 'provider-search' })
+    runProviderSearch({ city })
   }, [state.userContext.location, runProviderSearch])
 
   const selectInsurance = useCallback((insuranceId: string) => {
@@ -374,6 +382,11 @@ export function useConversation() {
     dispatch({ type: 'SET_LOCATION', location })
     runProviderSearch({ city: location })
   }, [runProviderSearch])
+
+  const goBackToGuidance = useCallback(() => {
+    dispatch({ type: 'SET_NAVIGATION_STATE', state: 'recommendation' })
+    dispatch({ type: 'SET_STEP', step: 'recommendation' })
+  }, [])
 
   const startConversation = useCallback(() => {
     const greeting: Message = {
@@ -393,6 +406,7 @@ export function useConversation() {
     selectInsurance,
     setLocation,
     startConversation,
+    goBackToGuidance,
     reset: () => dispatch({ type: 'RESET' }),
   }
 }

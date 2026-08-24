@@ -2,6 +2,9 @@ import { UserHealthContext, Severity, FunctionalImpact, SymptomTrend } from '../
 import { AIService, AIExtractionResult } from './types'
 
 const CONCERN_PATTERNS = [
+  { pattern: /(?:crushing|severe|terrible|intense|sharp|stabbing)\s+chest\s+(?:pain|discomfort|tightness|pressure)/i, concern: (m: RegExpMatchArray) => m[0].trim() },
+  { pattern: /chest\s+(?:pain|discomfort|tightness|pressure|crushing)/i, concern: 'chest pain' },
+  { pattern: /can'?t\s+breathe|breathing\s+(?:difficulty|problem|issue)|shortness\s+of\s+breath|struggling\s+to\s+breathe/i, concern: 'breathing difficulty' },
   { pattern: /head(ache)?|migraine/i, concern: 'headache' },
   { pattern: /stomach|abdomen|belly|tummy/i, concern: 'stomach pain' },
   { pattern: /fever|temperature|hot|burning up/i, concern: 'fever' },
@@ -32,7 +35,9 @@ interface ExtractionResult {
 
 function extractConcern(message: string): string | null {
   for (const { pattern, concern } of CONCERN_PATTERNS) {
-    if (pattern.test(message)) return concern
+    if (pattern.test(message)) {
+      return typeof concern === 'function' ? concern(message.match(pattern)!) : concern
+    }
   }
   return null
 }
@@ -41,35 +46,67 @@ function extractSymptoms(message: string): string[] {
   const symptoms: string[] = []
   const lower = message.toLowerCase()
 
-  const symptomPatterns = [
-    /pain|ache|hurt/i,
-    /nausea|vomit|throwing up/i,
-    /dizzy|lightheaded|faint/i,
-    /tired|fatigue|exhausted|weak/i,
-    /swelling|swollen/i,
-    /numbness|tingling/i,
-    /bleeding/i,
-    /discharge/i,
+  // Multi-word symptom phrases — checked first to preserve full safety-relevant language
+  const phrasePatterns: Array<{ pattern: RegExp; symptom: string }> = [
+    { pattern: /chest\s+(?:pain|discomfort|tightness|pressure|crushing)/i, symptom: 'chest pain' },
+    { pattern: /can'?t\s+breathe/i, symptom: "can't breathe" },
+    { pattern: /struggling\s+to\s+breathe/i, symptom: 'struggling to breathe' },
+    { pattern: /difficulty\s+breathing/i, symptom: 'difficulty breathing' },
+    { pattern: /shortness\s+of\s+breath/i, symptom: 'shortness of breath' },
+    { pattern: /passed\s+out/i, symptom: 'passed out' },
+    { pattern: /bleeding\s+heavily/i, symptom: 'bleeding heavily' },
+    { pattern: /severe\s+bleeding/i, symptom: 'severe bleeding' },
+    { pattern: /uncontrolled\s+bleeding/i, symptom: 'uncontrolled bleeding' },
+    { pattern: /face\s+droop/i, symptom: 'face drooping' },
+    { pattern: /slurred?\s+speech/i, symptom: 'slurred speech' },
+    { pattern: /throat\s+swelling/i, symptom: 'throat swelling' },
+    { pattern: /tongue\s+swelling/i, symptom: 'tongue swelling' },
+    { pattern: /seizure\s+happening/i, symptom: 'seizure happening now' },
+    { pattern: /having\s+a\s+seizure/i, symptom: 'having a seizure' },
   ]
 
-  symptomPatterns.forEach(pattern => {
-    const match = lower.match(pattern)
-    if (match) {
-      symptoms.push(match[0])
+  for (const { pattern, symptom } of phrasePatterns) {
+    if (pattern.test(message) && !symptoms.includes(symptom)) {
+      symptoms.push(symptom)
     }
-  })
+  }
+
+  // Single-word symptom patterns — only add if not already captured by phrases above
+  const singlePatterns: Array<{ pattern: RegExp; symptom: string }> = [
+    { pattern: /pain|ache|hurt/i, symptom: 'pain' },
+    { pattern: /nausea|vomit|throwing up/i, symptom: 'nausea' },
+    { pattern: /dizzy|lightheaded|faint/i, symptom: 'dizziness' },
+    { pattern: /tired|fatigue|exhausted|weak/i, symptom: 'fatigue' },
+    { pattern: /swelling|swollen/i, symptom: 'swelling' },
+    { pattern: /numbness|tingling/i, symptom: 'numbness' },
+    { pattern: /bleeding/i, symptom: 'bleeding' },
+    { pattern: /discharge/i, symptom: 'discharge' },
+    { pattern: /wheezing/i, symptom: 'wheezing' },
+    { pattern: /unconscious|not responsive/i, symptom: 'unconscious' },
+  ]
+
+  for (const { pattern, symptom } of singlePatterns) {
+    const match = lower.match(pattern)
+    if (match && !symptoms.some(s => s.toLowerCase() === symptom)) {
+      // Skip if this word is already part of a captured phrase
+      const alreadyCovered = phrasePatterns.some(
+        pp => symptoms.includes(pp.symptom) && pp.pattern.test(message)
+      )
+      if (!alreadyCovered || symptom === 'wheezing' || symptom === 'unconscious') {
+        symptoms.push(match[0])
+      }
+    }
+  }
 
   return symptoms
 }
 
 function extractDuration(message: string): string | null {
-  // Preserve the user's actual description — do not convert to categories
-
-  // Check for explicit duration mentions and return the raw phrase
   const durationPatterns = [
     /(?:for|since|about|around|approximately|over|under|less than|more than)\s+[\w\s]+(?:hour|minute|day|week|month|year)s?/i,
     /\d+\s*(?:hour|minute|day|week|month|year)s?\b/i,
     /just now|suddenly|started|minutes ago|today|yesterday|few days|this week|chronic|long time/i,
+    /last\s+(?:year|week|month)/i,
   ]
 
   for (const pattern of durationPatterns) {
@@ -85,7 +122,6 @@ function extractDuration(message: string): string | null {
 function extractSeverity(message: string): Severity | null {
   const lower = message.toLowerCase()
 
-  // Check for numeric severity (e.g., "7 out of 10", "severity 8")
   const numberMatch = lower.match(/(\d+)\s*(out of|\/)\s*10/)
   if (numberMatch) {
     const num = parseInt(numberMatch[1])
@@ -94,7 +130,6 @@ function extractSeverity(message: string): Severity | null {
     }
   }
 
-  // Check for standalone number 1-10 in severity context
   if (lower.includes('severity') || lower.includes('rate') || lower.includes('scale')) {
     const standaloneMatch = lower.match(/\b([1-9]|10)\b/)
     if (standaloneMatch) {
@@ -105,7 +140,6 @@ function extractSeverity(message: string): Severity | null {
     }
   }
 
-  // Check for severity keywords — store as description, NOT as numerical value
   if (/(?:severe|extreme|terrible|worst|unbearable|intense|sharp)/i.test(lower)) {
     return { description: 'severe' }
   }
@@ -122,7 +156,6 @@ function extractSeverity(message: string): Severity | null {
 function extractFunctionalImpact(message: string): FunctionalImpact | null {
   const lower = message.toLowerCase()
 
-  // Significant impact
   if (
     lower.includes("can't work") ||
     lower.includes('unable to work') ||
@@ -143,7 +176,6 @@ function extractFunctionalImpact(message: string): FunctionalImpact | null {
     return { level: 'significant', description: 'User reported inability to perform normal activities' }
   }
 
-  // Mild impact
   if (
     lower.includes('still work') ||
     lower.includes('can still work') ||
@@ -156,7 +188,6 @@ function extractFunctionalImpact(message: string): FunctionalImpact | null {
     return { level: 'mild', description: 'User reported some impact on daily activities' }
   }
 
-  // None
   if (
     lower.includes('no impact') ||
     lower.includes("doesn't affect") ||
@@ -172,7 +203,6 @@ function extractFunctionalImpact(message: string): FunctionalImpact | null {
 function extractSymptomTrend(message: string): SymptomTrend | null {
   const lower = message.toLowerCase()
 
-  // Rapidly worsening
   if (
     lower.includes('rapidly worsen') ||
     lower.includes('getting worse quickly') ||
@@ -183,7 +213,6 @@ function extractSymptomTrend(message: string): SymptomTrend | null {
     return 'rapidly_worsening'
   }
 
-  // Worsening
   if (
     lower.includes('worsening') ||
     lower.includes('getting worse') ||
@@ -195,7 +224,6 @@ function extractSymptomTrend(message: string): SymptomTrend | null {
     return 'worsening'
   }
 
-  // Improving
   if (
     lower.includes('improving') ||
     lower.includes('getting better') ||
@@ -207,7 +235,6 @@ function extractSymptomTrend(message: string): SymptomTrend | null {
     return 'improving'
   }
 
-  // Stable
   if (
     lower.includes('same') ||
     lower.includes('stable') ||

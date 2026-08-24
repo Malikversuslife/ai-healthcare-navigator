@@ -1,0 +1,186 @@
+import { useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
+import { useConversation } from '../hooks/useConversation'
+import { useVisualState } from '../hooks/useVisualState'
+import WelcomeView from './WelcomeView'
+import UnderstandingView from './UnderstandingView'
+import GuidanceView from './GuidanceView'
+import FindCareView from './FindCareView'
+import ProviderDetailView from './ProviderDetailView'
+import EmergencyView from './EmergencyView'
+import CompleteView from './CompleteView'
+
+function Navigator() {
+  const location = useLocation()
+  const initialMessage = (location.state as { initialMessage?: string })?.initialMessage
+
+  const {
+    state,
+    sendMessage,
+    findProviders,
+    setLocation,
+    startConversation,
+    goBackToGuidance,
+    reset,
+    selectInsurance,
+  } = useConversation()
+
+  const { visualState, messages, userContext, recommendation, providerMatches, isLoading, progress } =
+    useVisualState(state)
+
+  const hasStarted = useRef(false)
+  const [urgentHelpOpen, setUrgentHelpOpen] = useState(false)
+  const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!hasStarted.current) {
+      hasStarted.current = true
+      startConversation()
+    }
+  }, [startConversation])
+
+  useEffect(() => {
+    if (initialMessage && hasStarted.current && state.messages.length === 1) {
+      setTimeout(() => {
+        sendMessage(initialMessage)
+      }, 500)
+    }
+  }, [initialMessage, state.messages.length, sendMessage])
+
+  const selectedProviderMatch = selectedProviderId
+    ? providerMatches.find((m) => m.provider.id === selectedProviderId) ?? null
+    : null
+
+  const renderContent = () => {
+    // Provider detail takes priority when a provider is selected
+    if (selectedProviderId && selectedProviderMatch) {
+      return (
+        <ProviderDetailView
+          match={selectedProviderMatch}
+          progress={progress}
+          visualState={visualState}
+          selectedInsurance={state.selectedInsurance}
+          onBack={() => setSelectedProviderId(null)}
+        />
+      )
+    }
+
+    switch (visualState) {
+      case 'welcome':
+        return <WelcomeView onSend={sendMessage} isLoading={isLoading} />
+
+      case 'understanding':
+        return (
+          <UnderstandingView
+            messages={messages}
+            userContext={userContext}
+            progress={progress}
+            visualState={visualState}
+            isLoading={isLoading}
+            onSend={sendMessage}
+          />
+        )
+
+      case 'guidance':
+        return (
+          <GuidanceView
+            recommendation={recommendation!}
+            progress={progress}
+            visualState={visualState}
+            onFindProviders={() => findProviders()}
+          />
+        )
+
+      case 'find_care':
+        return (
+          <FindCareView
+            providerMatches={providerMatches}
+            userContext={userContext}
+            selectedInsurance={state.selectedInsurance}
+            progress={progress}
+            visualState={visualState}
+            onSelectProvider={setSelectedProviderId}
+            onLocationSelect={setLocation}
+            onSelectInsurance={selectInsurance}
+            onBack={goBackToGuidance}
+          />
+        )
+
+      case 'emergency':
+        return <EmergencyView onFindEmergencyCare={() => findProviders()} />
+
+      case 'complete':
+        return <CompleteView recommendation={recommendation} onReset={reset} />
+
+      case 'loading':
+        return (
+          <div className="flex items-center justify-center py-20">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-aubergine-600 mr-2" />
+            <span className="text-body-sm text-ink-500">Understanding...</span>
+          </div>
+        )
+
+      default:
+        return <WelcomeView onSend={sendMessage} isLoading={isLoading} />
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-bone-50 flex flex-col">
+      {/* Header */}
+      <header className="border-b border-ink-100 bg-bone-50">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between" style={{ minHeight: '56px' }}>
+          <div className="flex items-center gap-2.5">
+            <svg className="w-6 h-6 text-aubergine-600" viewBox="0 0 24 24" fill="none">
+              <path d="M6 4v16M18 4v16M6 12h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="12" cy="12" r="2" fill="currentColor" />
+            </svg>
+            <span className="text-body font-semibold text-ink-900">Hanya</span>
+          </div>
+
+          <button
+            onClick={() => setUrgentHelpOpen(!urgentHelpOpen)}
+            className="text-body-sm text-ink-600 hover:text-red-600 transition-colors"
+          >
+            Need urgent help?
+          </button>
+        </div>
+
+        {urgentHelpOpen && (
+          <div className="border-t border-ink-100 bg-white">
+            <div className="max-w-5xl mx-auto px-4 py-4">
+              <p className="text-body-sm text-ink-700 mb-2">
+                If you or someone near you is experiencing a medical emergency, please call emergency services immediately.
+              </p>
+              <a
+                href="tel:112"
+                className="inline-block px-4 py-2 bg-red-600 text-white rounded-xl text-body-sm font-medium hover:bg-red-700 transition-colors"
+              >
+                Call 112
+              </a>
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* Main content */}
+      <main className="flex-1 px-4 py-6 md:py-10">
+        {renderContent()}
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-ink-100">
+        <div className="max-w-5xl mx-auto px-4 py-4">
+          <p className="text-center text-body-sm text-ink-500 font-medium mb-1">
+            Hanya guides. It doesn&apos;t diagnose.
+          </p>
+          <p className="text-center text-caption text-ink-500">
+            Always consult a healthcare professional for medical advice.
+          </p>
+        </div>
+      </footer>
+    </div>
+  )
+}
+
+export default Navigator

@@ -63,10 +63,10 @@ function LocationPrompt({ onLocationSelect, onSkip }: LocationPromptProps) {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-ink-200 p-6 mb-4">
+    <div className="bg-white rounded-2xl border border-ink-100 p-6 mb-4">
       <div className="text-center mb-6">
-        <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-6 h-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="w-12 h-12 bg-aubergine-50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-6 h-6 text-aubergine-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
@@ -83,7 +83,7 @@ function LocationPrompt({ onLocationSelect, onSkip }: LocationPromptProps) {
         <div className="space-y-3">
           <button
             onClick={handleBrowserLocation}
-            className="w-full px-4 py-3 bg-teal-600 text-white rounded-xl font-medium hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
+            className="w-full px-4 py-3 bg-aubergine-600 text-white rounded-xl font-medium hover:bg-aubergine-700 transition-colors flex items-center justify-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -94,7 +94,7 @@ function LocationPrompt({ onLocationSelect, onSkip }: LocationPromptProps) {
           
           <button
             onClick={() => setUseBrowser(false)}
-            className="w-full px-4 py-3 bg-white border border-ink-200 text-ink-700 rounded-xl font-medium hover:border-teal-400 transition-colors"
+            className="w-full px-4 py-3 bg-white border border-ink-200 text-ink-700 rounded-xl font-medium hover:border-aubergine-300 transition-colors"
           >
             Enter location manually
           </button>
@@ -112,7 +112,6 @@ function LocationPrompt({ onLocationSelect, onSkip }: LocationPromptProps) {
 
       {useBrowser === false && !selectedCity && (
         <div className="space-y-4">
-          {/* Quick City Selection */}
           <div>
             <p className="text-sm font-medium text-ink-700 mb-3">Select your city:</p>
             <div className="grid grid-cols-2 gap-2">
@@ -120,7 +119,7 @@ function LocationPrompt({ onLocationSelect, onSkip }: LocationPromptProps) {
                 <button
                   key={city}
                   onClick={() => handleCitySelect(city)}
-                  className="px-3 py-2 bg-ink-50 border border-ink-200 rounded-lg text-sm text-ink-700 hover:border-teal-400 hover:bg-teal-50 transition-colors text-left"
+                  className="px-3 py-2 bg-ink-50 border border-ink-200 rounded-lg text-sm text-ink-700 hover:border-aubergine-300 hover:bg-aubergine-50 transition-colors text-left"
                 >
                   {city}
                 </button>
@@ -128,7 +127,6 @@ function LocationPrompt({ onLocationSelect, onSkip }: LocationPromptProps) {
             </div>
           </div>
 
-          {/* Manual Input */}
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-ink-200"></div>
@@ -144,12 +142,12 @@ function LocationPrompt({ onLocationSelect, onSkip }: LocationPromptProps) {
               value={manualLocation}
               onChange={(e) => setManualLocation(e.target.value)}
               placeholder="e.g., Victoria Island, Lagos"
-              className="flex-1 px-4 py-2 bg-white border border-ink-200 rounded-xl text-ink-900 placeholder-ink-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="flex-1 px-4 py-2 bg-white border border-ink-200 rounded-xl text-ink-900 placeholder-ink-400 focus:outline-none focus:ring-2 focus:ring-aubergine-600/20 focus:border-aubergine-600"
             />
             <button
               type="submit"
               disabled={!manualLocation.trim()}
-              className="px-4 py-2 bg-teal-600 text-white rounded-xl font-medium hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-aubergine-600 text-white rounded-xl font-medium hover:bg-aubergine-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Search
             </button>
@@ -166,7 +164,7 @@ function LocationPrompt({ onLocationSelect, onSkip }: LocationPromptProps) {
 
       {useBrowser === true && (
         <div className="text-center py-4">
-          <div className="animate-spin w-8 h-8 border-2 border-teal-600 border-t-transparent rounded-full mx-auto mb-3"></div>
+          <div className="animate-spin w-8 h-8 border-2 border-aubergine-600 border-t-transparent rounded-full mx-auto mb-3"></div>
           <p className="text-sm text-ink-600">Detecting your location...</p>
         </div>
       )}

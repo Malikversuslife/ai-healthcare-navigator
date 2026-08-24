@@ -6,7 +6,7 @@ interface ProviderListProps {
   onSelectProvider?: (providerId: string) => void
 }
 
-function ProviderList({ matches, onSelectProvider }: ProviderListProps) {
+function ProviderList({ matches, onSelectProvider = () => {} }: ProviderListProps) {
   if (matches.length === 0) {
     return (
       <div className="text-center py-8 bg-white rounded-xl border border-ink-200">

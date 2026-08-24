@@ -120,7 +120,7 @@ interface SafetySignalRule {
 }
 
 function combineText(context: UserHealthContext): string {
-  return [context.concern, ...context.symptoms].join(' ').toLowerCase()
+  return [context.concern, ...context.symptoms, context.duration].filter(Boolean).join(' ').toLowerCase()
 }
 
 // Shared helper: check if any keyword in a list matches (not negated)
