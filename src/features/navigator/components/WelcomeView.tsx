@@ -14,7 +14,7 @@ const STARTER_ACTIONS = [
 
 function WelcomeView({ onSend, isLoading }: WelcomeViewProps) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] px-4">
+    <div className="flex flex-col items-center justify-center min-h-[62vh] sm:min-h-[70vh] px-2 sm:px-4 py-6">
       <div className="w-full max-w-lg text-center">
         <h1 className="font-display text-display text-ink-900 mb-4 text-balance">
           What can I help you figure out today?
@@ -31,10 +31,11 @@ function WelcomeView({ onSend, isLoading }: WelcomeViewProps) {
         <div className="flex flex-wrap justify-center gap-2">
           {STARTER_ACTIONS.map((action) => (
             <button
+              type="button"
               key={action}
               onClick={() => onSend(action)}
               disabled={isLoading}
-              className="px-4 py-2 bg-white border border-ink-200 rounded-full text-body-sm text-ink-600 hover:border-aubergine-300 hover:text-aubergine-700 transition-colors disabled:opacity-50"
+              className="min-h-11 px-4 py-2 bg-white border border-ink-200 rounded-full text-body-sm text-ink-600 hover:border-aubergine-300 hover:text-aubergine-700 transition-colors disabled:opacity-50"
             >
               {action}
             </button>

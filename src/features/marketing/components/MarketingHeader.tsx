@@ -8,8 +8,13 @@ const NAV_LINKS = [
   { label: 'About', href: '#about' },
 ]
 
+export function getMobileMenuButtonLabel(isOpen: boolean): string {
+  return isOpen ? 'Close navigation menu' : 'Open navigation menu'
+}
+
 export default function MarketingHeader() {
   const [scrolled, setScrolled] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -57,14 +62,49 @@ export default function MarketingHeader() {
           </Link>
         </div>
 
-        {/* Mobile CTA */}
-        <Link
-          to="/navigator"
-          className="md:hidden text-body-sm font-medium text-white bg-aubergine-600 hover:bg-aubergine-700 px-4 py-2 rounded-full transition-colors"
-        >
-          Start
-        </Link>
+        {/* Mobile controls */}
+        <div className="md:hidden flex items-center gap-2">
+          <Link
+            to="/navigator"
+            className="min-h-11 inline-flex items-center text-body-sm font-medium text-white bg-aubergine-600 hover:bg-aubergine-700 px-4 py-2 rounded-full transition-colors"
+          >
+            Start
+          </Link>
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="marketing-mobile-menu"
+            aria-label={getMobileMenuButtonLabel(mobileMenuOpen)}
+            className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-full border border-soft-stone-200 bg-bone-100/80 text-ink-800 backdrop-blur-sm"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              {mobileMenuOpen ? (
+                <path strokeLinecap="round" d="M6 6l12 12M18 6L6 18" />
+              ) : (
+                <path strokeLinecap="round" d="M5 7h14M5 12h14M5 17h14" />
+              )}
+            </svg>
+          </button>
+        </div>
       </nav>
+
+      {mobileMenuOpen && (
+        <div id="marketing-mobile-menu" className="md:hidden border-t border-soft-stone-100 bg-bone-100/95 backdrop-blur-md">
+          <div className="section-container py-4 flex flex-col gap-2">
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="min-h-11 inline-flex items-center text-body-sm text-ink-700 hover:text-ink-900 transition-colors"
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
     </header>
   )
 }

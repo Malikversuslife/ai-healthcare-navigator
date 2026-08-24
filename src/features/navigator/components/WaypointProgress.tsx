@@ -26,11 +26,11 @@ function WaypointProgress({ progress, visualState }: WaypointProgressProps) {
   }
 
   return (
-    <div className="flex items-center gap-2 mb-8">
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-2 mb-8">
       {['Understanding', 'Next step', 'Find care'].map((label, i) => {
         const state = stepState(i)
         return (
-          <div key={label} className="flex items-center gap-2">
+            <div key={label} className="flex items-center gap-2 min-w-0">
             <div className="flex items-center gap-1.5">
               <div
                 className={`w-2 h-2 rounded-full transition-colors ${

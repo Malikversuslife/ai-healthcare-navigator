@@ -20,6 +20,14 @@
   ::selection {
     background-color: rgba(90, 45, 95, 0.15);
   }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid #5A2D5F;
+    outline-offset: 3px;
+  }
 }
 
 @layer components {

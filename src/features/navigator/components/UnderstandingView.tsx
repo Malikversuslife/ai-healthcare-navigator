@@ -28,7 +28,7 @@ function UnderstandingView({ messages, userContext, progress, visualState, isLoa
   const visibleMessages = messages.length > 1 ? messages.slice(1) : messages
 
   return (
-    <div className="flex gap-6 max-w-4xl mx-auto">
+    <div className="flex gap-6 max-w-4xl mx-auto min-w-0">
       {/* Conversation column */}
       <div className="flex-1 min-w-0">
         <WaypointProgress progress={progress} visualState={visualState} />

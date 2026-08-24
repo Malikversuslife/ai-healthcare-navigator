@@ -28,7 +28,7 @@ function ProviderCard({ match, onSelect }: ProviderCardProps) {
   return (
     <div className="bg-white border border-ink-100 rounded-2xl p-5 hover:border-ink-200 transition-colors">
       {/* Name and specialty */}
-      <h3 className="text-body font-medium text-ink-900 mb-0.5">{provider.name}</h3>
+      <h3 className="text-body font-medium text-ink-900 mb-0.5 break-words">{provider.name}</h3>
       <p className="text-body-sm text-ink-500 mb-2">{provider.specialty}</p>
 
       {/* Location */}
@@ -59,7 +59,7 @@ function ProviderCard({ match, onSelect }: ProviderCardProps) {
       )}
 
       {/* Availability, price, insurance, view details */}
-      <div className="flex items-end justify-between mt-3 pt-3 border-t border-ink-100">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mt-3 pt-3 border-t border-ink-100">
         <div className="space-y-0.5">
           <p className="text-body-sm text-ink-700">
             {AVAILABILITY_LABELS[provider.availability]}
@@ -75,8 +75,9 @@ function ProviderCard({ match, onSelect }: ProviderCardProps) {
         </div>
 
         <button
+          type="button"
           onClick={() => onSelect(provider.id)}
-          className="text-body-sm font-medium text-aubergine-600 hover:text-aubergine-700 transition-colors shrink-0"
+          className="min-h-11 inline-flex items-center text-body-sm font-medium text-aubergine-600 hover:text-aubergine-700 transition-colors shrink-0"
         >
           View details →
         </button>
@@ -84,7 +85,7 @@ function ProviderCard({ match, onSelect }: ProviderCardProps) {
 
       {insuranceStatus === 'not_accepted' && (
         <p className="text-caption text-ink-400 mt-3 border-t border-ink-100 pt-3">
-          This provider is listed as accepting your selected insurance plan.
+          This provider is not listed as accepting your selected insurance plan.
         </p>
       )}
     </div>

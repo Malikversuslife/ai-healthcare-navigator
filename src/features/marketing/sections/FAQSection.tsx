@@ -21,7 +21,7 @@ function FAQItem({ question, answer, isOpen, onToggle }: FAQItemProps) {
     <div className="border-b border-soft-stone-200">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between py-6 text-left group"
+        className="w-full min-h-11 flex items-center justify-between py-6 text-left group"
         aria-expanded={isOpen}
       >
         <span className="text-lg sm:text-xl font-display text-ink-900 pr-8">

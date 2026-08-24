@@ -28,8 +28,9 @@ function GuidanceView({ recommendation, progress, visualState, onFindProviders }
 
       <div className="mt-8 flex justify-start">
         <button
+          type="button"
           onClick={onFindProviders}
-          className="px-8 py-4 bg-aubergine-600 text-white rounded-2xl font-medium text-body hover:bg-aubergine-700 transition-colors"
+          className="min-h-11 px-8 py-4 bg-aubergine-600 text-white rounded-2xl font-medium text-body hover:bg-aubergine-700 transition-colors"
         >
           Find care now
         </button>

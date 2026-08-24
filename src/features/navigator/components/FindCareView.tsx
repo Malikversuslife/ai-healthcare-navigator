@@ -70,8 +70,9 @@ function FindCareView({
 
       <div className="mb-6">
         <button
+          type="button"
           onClick={onBack}
-          className="text-body-sm text-ink-500 hover:text-ink-700 transition-colors mb-4"
+          className="min-h-11 inline-flex items-center text-body-sm text-ink-500 hover:text-ink-700 transition-colors mb-4"
         >
           Back to guidance
         </button>
@@ -97,8 +98,9 @@ function FindCareView({
           {/* Insurance filters — visually subordinate */}
           <div className="mb-6">
             <button
+              type="button"
               onClick={() => setFiltersOpen(!filtersOpen)}
-              className="text-body-sm text-ink-500 hover:text-ink-700 transition-colors flex items-center gap-1.5"
+              className="min-h-11 text-body-sm text-ink-500 hover:text-ink-700 transition-colors inline-flex items-center gap-1.5"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -117,17 +119,19 @@ function FindCareView({
                 <div className="flex flex-wrap gap-2">
                   {selectedInsurance && (
                     <button
+                      type="button"
                       onClick={() => onSelectInsurance(null)}
-                      className="px-3 py-1.5 rounded-full text-body-sm font-medium bg-soft-stone-50 text-ink-600 hover:bg-soft-stone-100 transition-colors"
+                      className="min-h-11 px-3 py-1.5 rounded-full text-body-sm font-medium bg-soft-stone-50 text-ink-600 hover:bg-soft-stone-100 transition-colors"
                     >
                       Clear insurance
                     </button>
                   )}
                   {insuranceData.map((insurance) => (
                     <button
+                      type="button"
                       key={insurance.id}
                       onClick={() => onSelectInsurance(insurance.id)}
-                      className={`px-3 py-1.5 rounded-full text-body-sm font-medium transition-colors ${
+                      className={`min-h-11 px-3 py-1.5 rounded-full text-body-sm font-medium transition-colors ${
                         selectedInsurance === insurance.id
                           ? 'bg-aubergine-600 text-white'
                           : 'bg-soft-stone-50 text-ink-600 hover:bg-soft-stone-100'
@@ -166,8 +170,9 @@ function FindCareView({
           {/* See more */}
           {hasMore && (
             <button
+              type="button"
               onClick={() => setShowAll(true)}
-              className="mt-4 w-full py-3 text-body-sm font-medium text-ink-500 hover:text-ink-700 border border-ink-100 rounded-2xl hover:border-ink-200 transition-colors"
+              className="mt-4 w-full min-h-11 py-3 text-body-sm font-medium text-ink-500 hover:text-ink-700 border border-ink-100 rounded-2xl hover:border-ink-200 transition-colors"
             >
               See more options
             </button>
@@ -187,31 +192,35 @@ function FindCareView({
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
+              type="button"
               onClick={() => setLocationEditorOpen(true)}
-              className="px-4 py-2 bg-aubergine-600 text-white rounded-xl text-body-sm font-medium hover:bg-aubergine-700 transition-colors"
+              className="min-h-11 px-4 py-2 bg-aubergine-600 text-white rounded-xl text-body-sm font-medium hover:bg-aubergine-700 transition-colors"
             >
               Change location
             </button>
 
             {selectedInsurance && (
               <button
+                type="button"
                 onClick={() => onSelectInsurance(null)}
-                className="px-4 py-2 bg-white border border-ink-200 text-ink-700 rounded-xl text-body-sm font-medium hover:border-aubergine-300 transition-colors"
+                className="min-h-11 px-4 py-2 bg-white border border-ink-200 text-ink-700 rounded-xl text-body-sm font-medium hover:border-aubergine-300 transition-colors"
               >
                 Clear insurance
               </button>
             )}
 
             <button
+              type="button"
               onClick={() => setFiltersOpen(true)}
-              className="px-4 py-2 bg-white border border-ink-200 text-ink-700 rounded-xl text-body-sm font-medium hover:border-aubergine-300 transition-colors"
+              className="min-h-11 px-4 py-2 bg-white border border-ink-200 text-ink-700 rounded-xl text-body-sm font-medium hover:border-aubergine-300 transition-colors"
             >
               Change insurance
             </button>
 
             <button
+              type="button"
               onClick={onBack}
-              className="px-4 py-2 text-ink-500 text-body-sm font-medium hover:text-ink-700 transition-colors"
+              className="min-h-11 px-4 py-2 text-ink-500 text-body-sm font-medium hover:text-ink-700 transition-colors"
             >
               Back to guidance
             </button>
@@ -225,17 +234,19 @@ function FindCareView({
               <div className="flex flex-wrap gap-2">
                 {selectedInsurance && (
                   <button
+                    type="button"
                     onClick={() => onSelectInsurance(null)}
-                    className="px-3 py-1.5 rounded-full text-body-sm font-medium bg-soft-stone-50 text-ink-600 hover:bg-soft-stone-100 transition-colors"
+                    className="min-h-11 px-3 py-1.5 rounded-full text-body-sm font-medium bg-soft-stone-50 text-ink-600 hover:bg-soft-stone-100 transition-colors"
                   >
                     Clear insurance
                   </button>
                 )}
                 {insuranceData.map((insurance) => (
                   <button
+                    type="button"
                     key={insurance.id}
                     onClick={() => onSelectInsurance(insurance.id)}
-                    className={`px-3 py-1.5 rounded-full text-body-sm font-medium transition-colors ${
+                    className={`min-h-11 px-3 py-1.5 rounded-full text-body-sm font-medium transition-colors ${
                       selectedInsurance === insurance.id
                         ? 'bg-aubergine-600 text-white'
                         : 'bg-soft-stone-50 text-ink-600 hover:bg-soft-stone-100'

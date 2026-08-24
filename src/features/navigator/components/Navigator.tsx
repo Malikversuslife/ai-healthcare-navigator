@@ -12,6 +12,8 @@ import CompleteView from './CompleteView'
 import { emergencyConfig } from '../../../shared/config'
 import { ProviderMatch } from '../../../shared/types'
 
+export const URGENT_HELP_BUTTON_LABEL = 'Need urgent help?'
+
 export function shouldSendInitialMessage(
   initialMessage: string | undefined,
   hasStarted: boolean,
@@ -171,22 +173,25 @@ function Navigator() {
           </div>
 
           <button
+            type="button"
             onClick={() => setUrgentHelpOpen(!urgentHelpOpen)}
-            className="text-body-sm text-ink-600 hover:text-red-600 transition-colors"
+            aria-expanded={urgentHelpOpen}
+            aria-controls="urgent-help-panel"
+            className="min-h-11 px-3 -mr-3 text-body-sm text-ink-600 hover:text-red-600 transition-colors"
           >
-            Need urgent help?
+            {URGENT_HELP_BUTTON_LABEL}
           </button>
         </div>
 
         {urgentHelpOpen && (
-          <div className="border-t border-ink-100 bg-white">
+          <div id="urgent-help-panel" className="border-t border-ink-100 bg-white">
             <div className="max-w-5xl mx-auto px-4 py-4">
               <p className="text-body-sm text-ink-700 mb-2">
                 If you or someone near you is experiencing a medical emergency, please call emergency services immediately.
               </p>
               <a
                 href={`tel:${emergencyConfig.emergencyNumber}`}
-                className="inline-block px-4 py-2 bg-red-600 text-white rounded-xl text-body-sm font-medium hover:bg-red-700 transition-colors"
+                className="inline-flex min-h-11 items-center px-4 py-2 bg-red-600 text-white rounded-xl text-body-sm font-medium hover:bg-red-700 transition-colors"
               >
                 Call {emergencyConfig.emergencyNumber}
               </a>

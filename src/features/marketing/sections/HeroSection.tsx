@@ -30,13 +30,13 @@ export default function HeroSection() {
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
                 to="/navigator"
-                className="inline-flex items-center justify-center bg-aubergine-600 text-white px-8 py-4 rounded-full text-body font-medium hover:bg-aubergine-700 transition-colors"
+                className="inline-flex min-h-11 items-center justify-center bg-aubergine-600 text-white px-8 py-4 rounded-full text-body font-medium hover:bg-aubergine-700 transition-colors"
               >
                 Start with Hanya
               </Link>
               <a
                 href="#how-it-works"
-                className="inline-flex items-center justify-center text-soft-stone-300 hover:text-bone-100 px-8 py-4 text-body font-medium transition-colors"
+                className="inline-flex min-h-11 items-center justify-center text-soft-stone-300 hover:text-bone-100 px-8 py-4 text-body font-medium transition-colors"
               >
                 See how it works
               </a>

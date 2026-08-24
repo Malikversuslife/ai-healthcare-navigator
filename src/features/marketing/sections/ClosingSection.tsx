@@ -25,7 +25,7 @@ export default function ClosingSection() {
         </p>
         <Link
           to="/navigator"
-          className="inline-flex items-center justify-center bg-aubergine-600 text-white px-10 py-4 rounded-full text-body font-medium hover:bg-aubergine-700 transition-colors"
+          className="inline-flex min-h-11 items-center justify-center bg-aubergine-600 text-white px-10 py-4 rounded-full text-body font-medium hover:bg-aubergine-700 transition-colors"
         >
           Start with Hanya
         </Link>

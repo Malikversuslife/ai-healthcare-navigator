@@ -6,6 +6,14 @@ interface ComposerProps {
   placeholder?: string
 }
 
+export function canSubmitComposer(value: string, disabled = false): boolean {
+  return !!value.trim() && !disabled
+}
+
+export function shouldSubmitComposerKey(key: string, shiftKey: boolean): boolean {
+  return key === 'Enter' && !shiftKey
+}
+
 function Composer({ onSend, disabled = false, placeholder = "Describe what's going on..." }: ComposerProps) {
   const [value, setValue] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -18,7 +26,7 @@ function Composer({ onSend, disabled = false, placeholder = "Describe what's goi
 
   const handleSubmit = () => {
     const trimmed = value.trim()
-    if (!trimmed || disabled) return
+    if (!canSubmitComposer(value, disabled)) return
     onSend(trimmed)
     setValue('')
     if (textareaRef.current) {
@@ -27,7 +35,7 @@ function Composer({ onSend, disabled = false, placeholder = "Describe what's goi
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (shouldSubmitComposerKey(e.key, e.shiftKey)) {
       e.preventDefault()
       handleSubmit()
     }
@@ -41,7 +49,7 @@ function Composer({ onSend, disabled = false, placeholder = "Describe what's goi
   }
 
   return (
-    <div className="relative">
+    <div className="relative rounded-2xl bg-white">
       <textarea
         ref={textareaRef}
         value={value}
@@ -51,16 +59,22 @@ function Composer({ onSend, disabled = false, placeholder = "Describe what's goi
         placeholder={placeholder}
         disabled={disabled}
         rows={1}
-        aria-label="Send message"
-        className="w-full resize-none px-4 py-3 pr-12 bg-white border border-ink-200 rounded-2xl text-ink-900 placeholder-ink-400 focus:outline-none focus:ring-2 focus:ring-aubergine-600/20 focus:border-aubergine-600 transition-colors disabled:opacity-50 text-body leading-relaxed"
+        aria-label="Message Hanya"
+        aria-describedby="composer-help"
+        className="block w-full resize-none min-h-[64px] max-h-40 px-4 pt-3 pb-14 pr-16 bg-white border border-ink-200 rounded-2xl text-ink-900 placeholder-ink-400 focus:outline-none focus:ring-2 focus:ring-aubergine-600/20 focus:border-aubergine-600 transition-colors disabled:opacity-50 text-body leading-relaxed overflow-y-auto"
       />
+      <span id="composer-help" className="sr-only">
+        Press Enter to send. Press Shift and Enter for a new line.
+      </span>
       <button
+        type="button"
         onClick={handleSubmit}
-        disabled={!value.trim() || disabled}
+        disabled={!canSubmitComposer(value, disabled)}
         aria-label="Send message"
-        className="absolute right-2 bottom-2 w-8 h-8 flex items-center justify-center bg-aubergine-600 text-white rounded-full hover:bg-aubergine-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        aria-disabled={!canSubmitComposer(value, disabled)}
+        className="absolute right-3 bottom-3 min-w-11 min-h-11 w-11 h-11 flex items-center justify-center bg-aubergine-600 text-white rounded-full hover:bg-aubergine-700 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
       >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" />
         </svg>
       </button>

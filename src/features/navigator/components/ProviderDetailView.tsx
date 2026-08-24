@@ -42,8 +42,9 @@ function ProviderDetailView({
 
       <div className="mb-6">
         <button
+          type="button"
           onClick={onBack}
-          className="text-body-sm text-ink-500 hover:text-ink-700 transition-colors mb-4"
+          className="min-h-11 inline-flex items-center text-body-sm text-ink-500 hover:text-ink-700 transition-colors mb-4"
         >
           Back to results
         </button>
@@ -51,7 +52,7 @@ function ProviderDetailView({
 
       <article>
         <header className="mb-6">
-          <h2 className="font-display text-display-sm text-ink-900 mb-1">
+          <h2 className="font-display text-display-sm text-ink-900 mb-1 break-words">
             {provider.name}
           </h2>
           <p className="text-body text-ink-500">{provider.specialty}</p>
@@ -74,7 +75,7 @@ function ProviderDetailView({
 
         {/* Key details */}
         <section className="bg-white border border-ink-100 rounded-2xl p-5 mb-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <p className="text-caption text-ink-400 uppercase tracking-wide mb-1">
                 Availability
@@ -161,8 +162,9 @@ function ProviderDetailView({
         {/* Back */}
         <div className="pt-4 border-t border-ink-100">
           <button
+            type="button"
             onClick={onBack}
-            className="text-body-sm font-medium text-ink-600 hover:text-ink-800 transition-colors"
+            className="min-h-11 inline-flex items-center text-body-sm font-medium text-ink-600 hover:text-ink-800 transition-colors"
           >
             ← Back to results
           </button>
