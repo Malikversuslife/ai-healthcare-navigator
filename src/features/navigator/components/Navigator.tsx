@@ -9,6 +9,7 @@ import FindCareView from './FindCareView'
 import ProviderDetailView from './ProviderDetailView'
 import EmergencyView from './EmergencyView'
 import CompleteView from './CompleteView'
+import { emergencyConfig } from '../../../shared/config'
 
 function Navigator() {
   const location = useLocation()
@@ -107,7 +108,7 @@ function Navigator() {
         )
 
       case 'emergency':
-        return <EmergencyView onFindEmergencyCare={() => findProviders()} />
+        return <EmergencyView />
 
       case 'complete':
         return <CompleteView recommendation={recommendation} onReset={reset} />
@@ -153,10 +154,10 @@ function Navigator() {
                 If you or someone near you is experiencing a medical emergency, please call emergency services immediately.
               </p>
               <a
-                href="tel:112"
+                href={`tel:${emergencyConfig.emergencyNumber}`}
                 className="inline-block px-4 py-2 bg-red-600 text-white rounded-xl text-body-sm font-medium hover:bg-red-700 transition-colors"
               >
-                Call 112
+                Call {emergencyConfig.emergencyNumber}
               </a>
             </div>
           </div>

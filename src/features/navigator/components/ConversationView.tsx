@@ -118,9 +118,7 @@ function ConversationView() {
 
             {/* Emergency Alert */}
             {state.navigationState === 'emergency' && (
-              <EmergencyAlert
-                onFindEmergencyCare={() => findProviders()}
-              />
+              <EmergencyAlert />
             )}
 
             {/* Care Recommendation (non-emergency) */}

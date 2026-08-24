@@ -23,9 +23,7 @@ function ContextPanel({ userContext }: ContextPanelProps) {
     if (userContext.severity.description) {
       lines.push(userContext.severity.description)
     } else if (userContext.severity.value !== undefined) {
-      if (userContext.severity.value <= 3) lines.push('Mild discomfort')
-      else if (userContext.severity.value <= 6) lines.push('Moderate discomfort')
-      else lines.push('Significant discomfort')
+      lines.push(`Severity reported: ${userContext.severity.value}/10`)
     }
   }
 

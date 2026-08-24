@@ -1,10 +1,6 @@
 import { emergencyConfig } from '../../../shared/config'
 
-interface EmergencyViewProps {
-  onFindEmergencyCare: () => void
-}
-
-function EmergencyView({ onFindEmergencyCare }: EmergencyViewProps) {
+function EmergencyView() {
   return (
     <div className="max-w-lg mx-auto text-center py-12">
       <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-6">
@@ -27,15 +23,6 @@ function EmergencyView({ onFindEmergencyCare }: EmergencyViewProps) {
       >
         Call {emergencyConfig.emergencyNumber}
       </a>
-
-      <div className="mt-4">
-        <button
-          onClick={onFindEmergencyCare}
-          className="text-body-sm text-ink-500 hover:text-ink-700 transition-colors underline"
-        >
-          Find nearest emergency care
-        </button>
-      </div>
 
       <p className="text-caption text-ink-400 mt-8 max-w-sm mx-auto leading-relaxed">
         {emergencyConfig.safetyDisclaimer}

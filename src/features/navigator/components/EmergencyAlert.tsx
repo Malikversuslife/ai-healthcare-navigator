@@ -1,10 +1,6 @@
 import { emergencyConfig } from '../../../shared/config'
 
-interface EmergencyAlertProps {
-  onFindEmergencyCare: () => void
-}
-
-function EmergencyAlert({ onFindEmergencyCare }: EmergencyAlertProps) {
+function EmergencyAlert() {
   return (
     <div className="rounded-2xl border-2 border-red-300 bg-red-50 p-6 mb-6">
       {/* Header */}
@@ -31,12 +27,6 @@ function EmergencyAlert({ onFindEmergencyCare }: EmergencyAlertProps) {
           Call {emergencyConfig.emergencyNumber} Now
         </a>
 
-        <button
-          onClick={onFindEmergencyCare}
-          className="w-full px-6 py-3 bg-white border-2 border-red-300 text-red-700 rounded-xl font-medium hover:bg-red-50 transition-colors"
-        >
-          Find nearest emergency care
-        </button>
       </div>
 
       {/* Safety Disclaimer */}
