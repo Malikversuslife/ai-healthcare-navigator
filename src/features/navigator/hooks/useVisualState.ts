@@ -32,20 +32,27 @@ interface VisualStateResult {
   selectedInsurance: string | null
 }
 
-export function useVisualState(state: ConversationState): VisualStateResult {
-  const visualState = useMemo<VisualState>(() => {
+export function deriveVisualState(state: ConversationState): VisualState {
+    if (state.isLoading) return 'loading'
     if (state.navigationState === 'emergency') return 'emergency'
     if (state.navigationState === 'complete') return 'complete'
     if (state.navigationState === 'recommendation' && state.recommendation) return 'guidance'
-    if (state.navigationState === 'provider_search' && state.providerMatches.length > 0) return 'find_care'
-    if (state.navigationState === 'provider_search' && state.providerMatches.length === 0) return 'loading'
+    if (state.navigationState === 'provider_search') return 'find_care'
 
     const msgCount = state.messages.length
     if (msgCount === 0) return 'welcome'
     if (msgCount === 1) return 'welcome'
 
     return 'understanding'
-  }, [state.navigationState, state.recommendation, state.providerMatches.length, state.messages.length])
+}
+
+export function useVisualState(state: ConversationState): VisualStateResult {
+  const visualState = useMemo<VisualState>(() => deriveVisualState(state), [
+    state.isLoading,
+    state.navigationState,
+    state.recommendation,
+    state.messages.length,
+  ])
 
   return {
     visualState,

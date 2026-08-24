@@ -25,12 +25,13 @@ type ConversationAction =
   | { type: 'SET_RECOMMENDATION'; recommendation: NonNullable<ConversationState['recommendation']> }
   | { type: 'SET_PROVIDER_MATCHES'; matches: ProviderMatch[] }
   | { type: 'SET_LOCATION'; location: string }
-  | { type: 'SET_INSURANCE'; insuranceId: string }
+  | { type: 'SET_INSURANCE'; insuranceId: string | null }
   | { type: 'UPDATE_PROGRESS'; progress: Partial<ConversationProgress> }
   | { type: 'SET_NAVIGATION_STATE'; state: NavigationState }
   | { type: 'SET_NAVIGATION_INTENT'; intent: NavigationIntent }
   | { type: 'SET_SAFETY_RESULT'; result: SafetyResult }
   | { type: 'RESET' }
+  | { type: 'RESET_STARTED' }
 
 const initialProgress: ConversationProgress = {
   concernCollected: false,
@@ -39,22 +40,43 @@ const initialProgress: ConversationProgress = {
   severityCollected: false,
 }
 
-const initialState: ConversationState = {
-  messages: [],
-  currentStep: 'greeting',
-  userContext: {
-    concern: '',
-    symptoms: [],
-    duration: '',
-  },
-  recommendation: null,
-  providerMatches: [],
-  selectedInsurance: null,
-  isLoading: false,
-  progress: initialProgress,
-  navigationState: 'understanding',
-  navigationIntent: 'general_healthcare',
-  safetyResult: null,
+export function createInitialConversationState(): ConversationState {
+  return {
+    messages: [],
+    currentStep: 'greeting',
+    userContext: {
+      concern: '',
+      symptoms: [],
+      duration: '',
+    },
+    recommendation: null,
+    providerMatches: [],
+    selectedInsurance: null,
+    isLoading: false,
+    progress: { ...initialProgress },
+    navigationState: 'understanding',
+    navigationIntent: 'general_healthcare',
+    safetyResult: null,
+  }
+}
+
+const initialState: ConversationState = createInitialConversationState()
+
+export function createGreetingMessage(): Message {
+  return {
+    id: generateId(),
+    role: 'assistant',
+    content: 'Hello! I\'m your healthcare navigator. I\'ll help you understand what kind of care may be appropriate and find providers near you.\n\nWhat\'s bothering you today?',
+    timestamp: Date.now(),
+  }
+}
+
+export function createStartedConversationState(): ConversationState {
+  return {
+    ...createInitialConversationState(),
+    messages: [createGreetingMessage()],
+    currentStep: 'intake',
+  }
 }
 
 function calculateProgress(context: UserHealthContext): ConversationProgress {
@@ -66,7 +88,7 @@ function calculateProgress(context: UserHealthContext): ConversationProgress {
   }
 }
 
-function conversationReducer(
+export function conversationReducer(
   state: ConversationState,
   action: ConversationAction
 ): ConversationState {
@@ -102,7 +124,9 @@ function conversationReducer(
     case 'SET_SAFETY_RESULT':
       return { ...state, safetyResult: action.result }
     case 'RESET':
-      return initialState
+      return createInitialConversationState()
+    case 'RESET_STARTED':
+      return createStartedConversationState()
     default:
       return state
   }
@@ -167,11 +191,12 @@ export function useConversation() {
     dispatch({ type: 'ADD_MESSAGE', message })
   }, [])
 
-  const runProviderSearch = useCallback((overrides?: Partial<ProviderSearchContext>) => {
+  const runProviderSearch = useCallback((overrides: Partial<ProviderSearchContext> = {}) => {
+    const hasInsuranceOverride = Object.prototype.hasOwnProperty.call(overrides, 'insurance')
     const ctx: ProviderSearchContext = {
-      city: overrides?.city ?? state.userContext.location,
-      specialty: overrides?.specialty ?? (state.userContext.specialty ? normalizeSpecialty(state.userContext.specialty) : undefined),
-      insurance: overrides?.insurance ?? state.selectedInsurance ?? undefined,
+      city: overrides.city ?? state.userContext.location,
+      specialty: overrides.specialty ?? (state.userContext.specialty ? normalizeSpecialty(state.userContext.specialty) : undefined),
+      insurance: hasInsuranceOverride ? overrides.insurance : state.selectedInsurance ?? undefined,
     }
 
     const matches = searchProviders(ctx)
@@ -371,11 +396,11 @@ export function useConversation() {
     runProviderSearch({ city })
   }, [state.userContext.location, runProviderSearch])
 
-  const selectInsurance = useCallback((insuranceId: string) => {
+  const selectInsurance = useCallback((insuranceId: string | null) => {
     dispatch({ type: 'SET_INSURANCE', insuranceId: insuranceId })
 
     // Re-run search with updated insurance
-    runProviderSearch({ insurance: insuranceId })
+    runProviderSearch({ insurance: insuranceId ?? undefined })
   }, [runProviderSearch])
 
   const setLocation = useCallback((location: string) => {
@@ -389,14 +414,13 @@ export function useConversation() {
   }, [])
 
   const startConversation = useCallback(() => {
-    const greeting: Message = {
-      id: generateId(),
-      role: 'assistant',
-      content: 'Hello! I\'m your healthcare navigator. I\'ll help you understand what kind of care may be appropriate and find providers near you.\n\nWhat\'s bothering you today?',
-      timestamp: Date.now(),
-    }
-    dispatch({ type: 'ADD_MESSAGE', message: greeting })
+    dispatch({ type: 'ADD_MESSAGE', message: createGreetingMessage() })
     dispatch({ type: 'SET_STEP', step: 'intake' })
+  }, [])
+
+  const reset = useCallback(() => {
+    sendingRef.current = false
+    dispatch({ type: 'RESET_STARTED' })
   }, [])
 
   return {
@@ -407,6 +431,6 @@ export function useConversation() {
     setLocation,
     startConversation,
     goBackToGuidance,
-    reset: () => dispatch({ type: 'RESET' }),
+    reset,
   }
 }

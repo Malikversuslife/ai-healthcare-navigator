@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { getGeolocationRecoveryMessage, mapCoordinatesToSupportedCity, unsupportedCoordinatesMessage } from '../utils/location'
 
 interface LocationPromptProps {
   onLocationSelect: (location: string) => void
@@ -20,9 +21,18 @@ function LocationPrompt({ onLocationSelect, onSkip }: LocationPromptProps) {
   const [manualLocation, setManualLocation] = useState('')
   const [useBrowser, setUseBrowser] = useState<boolean | null>(null)
   const [selectedCity, setSelectedCity] = useState<string | null>(null)
+  const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null)
 
   const handleBrowserLocation = async () => {
     setUseBrowser(true)
+    setRecoveryMessage(null)
+
+    if (!navigator.geolocation) {
+      setRecoveryMessage(getGeolocationRecoveryMessage())
+      setUseBrowser(false)
+      return
+    }
+
     try {
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -32,20 +42,17 @@ function LocationPrompt({ onLocationSelect, onSkip }: LocationPromptProps) {
       })
 
       const { latitude, longitude } = position.coords
+      const city = mapCoordinatesToSupportedCity(latitude, longitude)
 
-      let city = 'Lagos'
-      if (latitude > 6.4 && latitude < 6.6 && longitude > 3.3 && longitude < 3.5) {
-        city = 'Lagos'
-      } else if (latitude > 8.9 && latitude < 9.2 && longitude > 7.4 && longitude < 7.6) {
-        city = 'Abuja'
-      } else if (latitude > 7.3 && latitude < 7.5 && longitude > 3.8 && longitude < 4.1) {
-        city = 'Ibadan'
-      } else if (latitude > 4.7 && latitude < 4.9 && longitude > 6.9 && longitude < 7.1) {
-        city = 'Port Harcourt'
+      if (!city) {
+        setRecoveryMessage(unsupportedCoordinatesMessage)
+        setUseBrowser(false)
+        return
       }
 
       onLocationSelect(city)
-    } catch {
+    } catch (error) {
+      setRecoveryMessage(getGeolocationRecoveryMessage(error as GeolocationPositionError))
       setUseBrowser(false)
     }
   }
@@ -112,6 +119,12 @@ function LocationPrompt({ onLocationSelect, onSkip }: LocationPromptProps) {
 
       {useBrowser === false && !selectedCity && (
         <div className="space-y-4">
+          {recoveryMessage && (
+            <p className="text-sm text-ink-600 bg-soft-stone-50 border border-ink-100 rounded-xl px-4 py-3">
+              {recoveryMessage}
+            </p>
+          )}
+
           <div>
             <p className="text-sm font-medium text-ink-700 mb-3">Select your city:</p>
             <div className="grid grid-cols-2 gap-2">
@@ -154,7 +167,10 @@ function LocationPrompt({ onLocationSelect, onSkip }: LocationPromptProps) {
           </form>
 
           <button
-            onClick={() => setUseBrowser(null)}
+            onClick={() => {
+              setRecoveryMessage(null)
+              setUseBrowser(null)
+            }}
             className="text-sm text-ink-500 hover:text-ink-700 transition-colors"
           >
             ← Back to options

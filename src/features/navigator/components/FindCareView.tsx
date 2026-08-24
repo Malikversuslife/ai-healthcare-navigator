@@ -8,6 +8,14 @@ import insuranceData from '../data/mock-insurance.json'
 
 const INITIAL_COUNT = 3
 
+export function shouldShowLocationPrompt(
+  providerCount: number,
+  location: string | undefined,
+  locationEditorOpen: boolean
+): boolean {
+  return providerCount === 0 && (!location || locationEditorOpen)
+}
+
 interface FindCareViewProps {
   providerMatches: ProviderMatch[]
   userContext: UserHealthContext
@@ -16,7 +24,7 @@ interface FindCareViewProps {
   visualState: VisualState
   onSelectProvider: (providerId: string) => void
   onLocationSelect: (location: string) => void
-  onSelectInsurance: (insuranceId: string) => void
+  onSelectInsurance: (insuranceId: string | null) => void
   onBack: () => void
 }
 
@@ -33,9 +41,15 @@ function FindCareView({
 }: FindCareViewProps) {
   const [showAll, setShowAll] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [locationEditorOpen, setLocationEditorOpen] = useState(false)
 
-  const showLocationPrompt = providerMatches.length === 0 && !userContext.location
+  const showLocationPrompt = shouldShowLocationPrompt(providerMatches.length, userContext.location, locationEditorOpen)
   const hasResults = providerMatches.length > 0
+
+  const handleLocationSelect = (location: string) => {
+    setLocationEditorOpen(false)
+    onLocationSelect(location)
+  }
 
   const contextLine = (() => {
     const parts: string[] = []
@@ -70,7 +84,7 @@ function FindCareView({
       </div>
 
       {showLocationPrompt && (
-        <LocationPrompt onLocationSelect={onLocationSelect} />
+        <LocationPrompt onLocationSelect={handleLocationSelect} />
       )}
 
       {hasResults && (
@@ -101,6 +115,14 @@ function FindCareView({
                   Insurance
                 </p>
                 <div className="flex flex-wrap gap-2">
+                  {selectedInsurance && (
+                    <button
+                      onClick={() => onSelectInsurance(null)}
+                      className="px-3 py-1.5 rounded-full text-body-sm font-medium bg-soft-stone-50 text-ink-600 hover:bg-soft-stone-100 transition-colors"
+                    >
+                      Clear insurance
+                    </button>
+                  )}
                   {insuranceData.map((insurance) => (
                     <button
                       key={insurance.id}
@@ -159,9 +181,72 @@ function FindCareView({
           <p className="text-body text-ink-600 mb-2">
             No providers found for this search.
           </p>
-          <p className="text-body-sm text-ink-400">
-            Try adjusting your location or insurance filter.
+          <p className="text-body-sm text-ink-500 mb-6">
+            Change your location or insurance filter to search again.
           </p>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => setLocationEditorOpen(true)}
+              className="px-4 py-2 bg-aubergine-600 text-white rounded-xl text-body-sm font-medium hover:bg-aubergine-700 transition-colors"
+            >
+              Change location
+            </button>
+
+            {selectedInsurance && (
+              <button
+                onClick={() => onSelectInsurance(null)}
+                className="px-4 py-2 bg-white border border-ink-200 text-ink-700 rounded-xl text-body-sm font-medium hover:border-aubergine-300 transition-colors"
+              >
+                Clear insurance
+              </button>
+            )}
+
+            <button
+              onClick={() => setFiltersOpen(true)}
+              className="px-4 py-2 bg-white border border-ink-200 text-ink-700 rounded-xl text-body-sm font-medium hover:border-aubergine-300 transition-colors"
+            >
+              Change insurance
+            </button>
+
+            <button
+              onClick={onBack}
+              className="px-4 py-2 text-ink-500 text-body-sm font-medium hover:text-ink-700 transition-colors"
+            >
+              Back to guidance
+            </button>
+          </div>
+
+          {filtersOpen && (
+            <div className="mt-6 bg-white border border-ink-100 rounded-2xl p-4 text-left">
+              <p className="text-body-sm font-medium text-ink-700 mb-2">
+                Insurance
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {selectedInsurance && (
+                  <button
+                    onClick={() => onSelectInsurance(null)}
+                    className="px-3 py-1.5 rounded-full text-body-sm font-medium bg-soft-stone-50 text-ink-600 hover:bg-soft-stone-100 transition-colors"
+                  >
+                    Clear insurance
+                  </button>
+                )}
+                {insuranceData.map((insurance) => (
+                  <button
+                    key={insurance.id}
+                    onClick={() => onSelectInsurance(insurance.id)}
+                    className={`px-3 py-1.5 rounded-full text-body-sm font-medium transition-colors ${
+                      selectedInsurance === insurance.id
+                        ? 'bg-aubergine-600 text-white'
+                        : 'bg-soft-stone-50 text-ink-600 hover:bg-soft-stone-100'
+                    }`}
+                  >
+                    {insurance.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

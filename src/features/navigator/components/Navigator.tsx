@@ -10,6 +10,24 @@ import ProviderDetailView from './ProviderDetailView'
 import EmergencyView from './EmergencyView'
 import CompleteView from './CompleteView'
 import { emergencyConfig } from '../../../shared/config'
+import { ProviderMatch } from '../../../shared/types'
+
+export function shouldSendInitialMessage(
+  initialMessage: string | undefined,
+  hasStarted: boolean,
+  consumed: boolean
+): boolean {
+  return !!initialMessage && hasStarted && !consumed
+}
+
+export function findSelectedProviderMatch(
+  providerMatches: ProviderMatch[],
+  selectedProviderId: string | null
+): ProviderMatch | null {
+  return selectedProviderId
+    ? providerMatches.find((m) => m.provider.id === selectedProviderId) ?? null
+    : null
+}
 
 function Navigator() {
   const location = useLocation()
@@ -30,8 +48,11 @@ function Navigator() {
     useVisualState(state)
 
   const hasStarted = useRef(false)
+  const initialMessageConsumed = useRef(false)
   const [urgentHelpOpen, setUrgentHelpOpen] = useState(false)
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null)
+
+  const selectedProviderMatch = findSelectedProviderMatch(providerMatches, selectedProviderId)
 
   useEffect(() => {
     if (!hasStarted.current) {
@@ -41,16 +62,26 @@ function Navigator() {
   }, [startConversation])
 
   useEffect(() => {
-    if (initialMessage && hasStarted.current && state.messages.length === 1) {
+    if (shouldSendInitialMessage(initialMessage, hasStarted.current, initialMessageConsumed.current)) {
+      initialMessageConsumed.current = true
       setTimeout(() => {
-        sendMessage(initialMessage)
+        sendMessage(initialMessage!)
       }, 500)
     }
-  }, [initialMessage, state.messages.length, sendMessage])
+  }, [initialMessage, sendMessage])
 
-  const selectedProviderMatch = selectedProviderId
-    ? providerMatches.find((m) => m.provider.id === selectedProviderId) ?? null
-    : null
+  useEffect(() => {
+    if (selectedProviderId && !selectedProviderMatch) {
+      setSelectedProviderId(null)
+    }
+  }, [selectedProviderId, selectedProviderMatch])
+
+  const handleReset = () => {
+    initialMessageConsumed.current = true
+    setSelectedProviderId(null)
+    setUrgentHelpOpen(false)
+    reset()
+  }
 
   const renderContent = () => {
     // Provider detail takes priority when a provider is selected
@@ -111,7 +142,7 @@ function Navigator() {
         return <EmergencyView />
 
       case 'complete':
-        return <CompleteView recommendation={recommendation} onReset={reset} />
+        return <CompleteView recommendation={recommendation} onReset={handleReset} />
 
       case 'loading':
         return (
