@@ -474,7 +474,20 @@ describe('buildEmergencyRecommendation', () => {
     const rec = buildEmergencyRecommendation()
     expect(rec.pathway).toBe('emergency')
     expect(rec.nextSteps.some(s => s.type === 'emergency')).toBe(true)
+    expect(rec.nextSteps.some(s => s.type === 'find-provider')).toBe(false)
     expect(rec.disclaimer).toContain('not determine or rule out')
+  })
+
+  it('does not expose unsupported emergency facility discovery', () => {
+    const rec = buildEmergencyRecommendation()
+    const emergencyCopy = rec.nextSteps
+      .map(step => `${step.label} ${step.description}`.toLowerCase())
+      .join(' ')
+
+    expect(rec.nextSteps).toHaveLength(1)
+    expect(rec.nextSteps[0].label).toBe('Call Emergency Services')
+    expect(emergencyCopy).not.toContain('nearest hospital')
+    expect(emergencyCopy).not.toContain('emergency room')
   })
 })
 

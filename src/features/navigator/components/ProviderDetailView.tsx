@@ -153,7 +153,7 @@ function ProviderDetailView({
             )}
             {selectedInsurance && insuranceStatus === 'not_accepted' && (
               <p className="text-body-sm text-ink-500 mt-2">
-                This provider is listed as accepting your selected insurance plan.
+                This provider is not listed as accepting your selected insurance plan.
               </p>
             )}
           </section>

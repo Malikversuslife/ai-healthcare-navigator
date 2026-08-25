@@ -16,8 +16,8 @@ const PRINCIPLES = [
     description: 'Connects you with healthcare options that match your needs and location.',
   },
   {
-    title: 'Private by design',
-    description: 'Your health information stays between you and your device.',
+    title: 'Privacy-aware prototype',
+    description: 'The Navigator does not require an account; OpenAI mode processes relevant context through Hanya\'s server.',
   },
   {
     title: 'Transparent',

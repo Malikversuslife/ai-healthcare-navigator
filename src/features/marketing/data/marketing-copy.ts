@@ -68,7 +68,7 @@ export const TRUST = {
     { title: 'Emergency-aware', description: 'Recognizes predefined safety patterns and escalates immediately when appropriate.' },
     { title: 'Recommends pathways', description: 'Suggests the most appropriate care pathway — not diagnoses, not prescriptions.' },
     { title: 'Helps you find providers', description: 'Connects you with healthcare options that match your needs and location.' },
-    { title: 'Private by design', description: 'Your health information stays between you and your device.' },
+    { title: 'Privacy-aware prototype', description: 'The Navigator does not require an account; OpenAI mode processes relevant context through Hanya\'s server.' },
     { title: 'Transparent', description: 'Hanya explains why it suggests a particular next step. No black boxes.' },
   ],
 } as const
@@ -103,7 +103,7 @@ export const FAQ = {
     },
     {
       question: 'Is my information private?',
-      answer: 'Yes. Hanya is private by design. Your health information stays between you and your device.',
+      answer: 'The Navigator does not require an account in this MVP. OpenAI-backed mode sends relevant conversation context through Hanya\'s server endpoint for AI processing; fallback mode uses local structured extraction.',
     },
   ],
 } as const

@@ -56,7 +56,7 @@ export default function FAQSection() {
     { question: 'Can Hanya help me find healthcare providers?', answer: 'Yes. When a provider visit is recommended, Hanya helps you find options that match your location, specialty need, and insurance.' },
     { question: 'Does Hanya verify insurance coverage?', answer: 'Hanya shows whether a provider lists your selected insurance plan. It does not guarantee coverage — always confirm directly with the provider.' },
     { question: 'What happens if something sounds like an emergency?', answer: 'Hanya has built-in safety awareness. If your symptoms suggest a potential emergency, it will immediately recommend calling emergency services or seeking urgent care.' },
-    { question: 'Is my information private?', answer: 'Yes. Hanya is private by design. Your health information stays between you and your device.' },
+    { question: 'Is my information private?', answer: 'The Navigator does not require an account in this MVP. OpenAI-backed mode sends relevant conversation context through Hanya\'s server endpoint for AI processing; fallback mode uses local structured extraction.' },
   ]
 
   return (
