@@ -57,6 +57,74 @@
   .photo-warm {
     filter: saturate(1.05) contrast(1.02) brightness(0.98);
   }
+
+  .hero-product-preview,
+  .hero-message,
+  .hero-typing,
+  .hero-context-chips {
+    opacity: 0;
+    transform: translateY(8px);
+    animation: heroConversationIn 560ms ease-out forwards;
+  }
+
+  .hero-product-preview {
+    transform: translateY(10px) scale(0.985);
+    animation-delay: 180ms;
+  }
+
+  .hero-message-1 {
+    animation-delay: 520ms;
+  }
+
+  .hero-message-2 {
+    animation-delay: 920ms;
+  }
+
+  .hero-message-3 {
+    animation-delay: 1320ms;
+  }
+
+  .hero-typing {
+    animation-delay: 1680ms;
+  }
+
+  .hero-context-chips {
+    animation-delay: 1820ms;
+  }
+
+  .hero-typing-dot {
+    animation: heroTypingPulse 1200ms ease-in-out infinite;
+    animation-delay: 1800ms;
+  }
+
+  .hero-typing-dot:nth-child(2) {
+    animation-delay: 1960ms;
+  }
+
+  .hero-typing-dot:nth-child(3) {
+    animation-delay: 2120ms;
+  }
+}
+
+@keyframes heroConversationIn {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes heroTypingPulse {
+  0%,
+  70%,
+  100% {
+    opacity: 0.45;
+    transform: translateY(0);
+  }
+
+  35% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
 }
 
 /* Scrollbar */
@@ -89,5 +157,20 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .hero-product-preview,
+  .hero-message,
+  .hero-typing,
+  .hero-context-chips {
+    opacity: 1;
+    transform: none;
+    animation: none !important;
+  }
+
+  .hero-typing-dot {
+    opacity: 0.7;
+    transform: none;
+    animation: none !important;
   }
 }

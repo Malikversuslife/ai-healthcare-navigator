@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { canSubmitComposer, shouldSubmitComposerKey } from '../components/Composer'
-import { URGENT_HELP_BUTTON_LABEL } from '../components/Navigator'
+import { NAVIGATOR_BRAND_HOME_LABEL, NAVIGATOR_BRAND_HOME_PATH, URGENT_HELP_BUTTON_LABEL } from '../components/Navigator'
 import { getMobileMenuButtonLabel } from '../../marketing/components/MarketingHeader'
 
 describe('presentation accessibility polish', () => {
@@ -25,6 +25,11 @@ describe('presentation accessibility polish', () => {
 
   it('urgent-help control remains accessible by label', () => {
     expect(URGENT_HELP_BUTTON_LABEL).toBe('Need urgent help?')
+  })
+
+  it('navigator brand exposes an accessible home link contract', () => {
+    expect(NAVIGATOR_BRAND_HOME_LABEL).toBe('Hanya home')
+    expect(NAVIGATOR_BRAND_HOME_PATH).toBe('/')
   })
 
   it('responsive navigation exposes appropriate accessible labels', () => {
