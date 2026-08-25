@@ -69,11 +69,13 @@ export default function MockConversation({
   contextPlaceholder,
 }: MockConversationProps) {
   const state = useMockConversation(script)
+  const isRestarting = !state.isFading && state.visibleTurns.length === 0 && script.turns.length > 0
+  const visibleTurns = isRestarting ? [script.turns[0]] : state.visibleTurns
 
   return (
-    <div className={`${state.isFading ? 'mock-conversation-fading' : ''} ${className}`} aria-hidden="true">
+    <div className={`${state.isFading ? 'mock-conversation-fading' : ''} ${isRestarting ? 'mock-conversation-restarting' : ''} ${className}`} aria-hidden="true">
       <div className={`mock-conversation-messages ${messageClassName}`}>
-        {state.visibleTurns.map((turn) => (
+        {visibleTurns.map((turn) => (
           <MessageBubble key={`${turn.revealAt}-${turn.text}`} turn={turn} variant={variant} />
         ))}
         {state.isTyping && <TypingIndicator variant={variant} />}
