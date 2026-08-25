@@ -1,9 +1,15 @@
+import { useRef } from 'react'
+import { useInView } from '../hooks/useInView'
+
 export default function ProviderDiscoverySection() {
+  const sectionRef = useRef<HTMLElement>(null)
+  const isInView = useInView(sectionRef)
+
   return (
-    <section id="find-care" className="bg-soft-stone-50 py-section-lg overflow-hidden">
+    <section ref={sectionRef} id="find-care" className="bg-soft-stone-50 py-section-lg overflow-hidden">
       <div className="section-container">
         {/* Text */}
-        <div className="max-w-3xl mb-12 lg:mb-16">
+        <div className={`marketing-reveal ${isInView ? 'is-visible' : ''} max-w-3xl mb-12 lg:mb-16`}>
           <h2 className="font-display text-display-xl text-ink-900 mb-6 text-balance">
             Find care<br />
             <span className="italic text-aubergine-600">that fits.</span>
@@ -14,7 +20,7 @@ export default function ProviderDiscoverySection() {
         </div>
 
         {/* Oversized provider discovery interface — extends beyond standard container */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl border border-soft-stone-100 shadow-sm overflow-hidden">
+        <div className={`marketing-reveal reveal-delay-1 ${isInView ? 'is-visible' : ''} bg-white rounded-2xl sm:rounded-3xl border border-soft-stone-100 shadow-sm overflow-hidden`}>
           {/* Search/context bar */}
           <div className="border-b border-soft-stone-100 px-8 py-5 flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2 bg-bone-50 rounded-full px-4 py-2">
@@ -42,7 +48,7 @@ export default function ProviderDiscoverySection() {
           {/* Provider results — oversized, detailed */}
           <div className="px-8 pb-8 space-y-4">
             {/* Provider 1 */}
-            <div className="bg-bone-50 rounded-2xl p-6 border border-soft-stone-100">
+            <div className={`marketing-provider-card marketing-reveal reveal-delay-2 ${isInView ? 'is-visible' : ''} bg-bone-50 rounded-2xl p-6 border border-soft-stone-100`}>
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
                 <div>
                   <p className="text-lg font-medium text-ink-900">Dr. Amara Okafor</p>
@@ -67,7 +73,7 @@ export default function ProviderDiscoverySection() {
                 <span>From ₦15,000</span>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="marketing-match-reasons flex flex-wrap gap-2">
                 {['Specialty match', 'In Lekki', 'Accepts your insurance'].map((reason) => (
                   <span
                     key={reason}
@@ -80,7 +86,7 @@ export default function ProviderDiscoverySection() {
             </div>
 
             {/* Provider 2 */}
-            <div className="bg-bone-50 rounded-2xl p-6 border border-soft-stone-100">
+            <div className={`marketing-provider-card marketing-reveal reveal-delay-3 ${isInView ? 'is-visible' : ''} bg-bone-50 rounded-2xl p-6 border border-soft-stone-100`}>
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
                 <div>
                   <p className="text-lg font-medium text-ink-900">ClearView Eye Centre</p>
@@ -105,7 +111,7 @@ export default function ProviderDiscoverySection() {
                 <span>From ₦12,000</span>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="marketing-match-reasons flex flex-wrap gap-2">
                 {['Specialty match', 'Competitive pricing'].map((reason) => (
                   <span
                     key={reason}
@@ -118,7 +124,7 @@ export default function ProviderDiscoverySection() {
             </div>
 
             {/* Provider 3 */}
-            <div className="bg-bone-50 rounded-2xl p-6 border border-soft-stone-100">
+            <div className={`marketing-provider-card marketing-reveal reveal-delay-4 ${isInView ? 'is-visible' : ''} bg-bone-50 rounded-2xl p-6 border border-soft-stone-100`}>
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
                 <div>
                   <p className="text-lg font-medium text-ink-900">Lagos University Teaching Hospital</p>
@@ -143,7 +149,7 @@ export default function ProviderDiscoverySection() {
                 <span>From ₦8,000</span>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="marketing-match-reasons flex flex-wrap gap-2">
                 {['Specialty match', 'Teaching hospital', 'Accepts your insurance'].map((reason) => (
                   <span
                     key={reason}

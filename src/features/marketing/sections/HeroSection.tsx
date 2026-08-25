@@ -1,4 +1,24 @@
 import { Link } from 'react-router-dom'
+import MockConversation from '../components/MockConversation'
+import { MockConversationScript } from '../hooks/useMockConversation'
+
+const HERO_SCRIPT: MockConversationScript = {
+  loopDuration: 12000,
+  fadeAt: 10800,
+  typingAt: 8200,
+  turns: [
+    { speaker: 'assistant', text: 'Hi. I\'m Hanya, your healthcare navigator. What\'s going on?', revealAt: 600 },
+    { speaker: 'user', text: 'I\'ve had a sharp pain in my left eye since yesterday.', revealAt: 2200 },
+    { speaker: 'assistant', text: 'Has your vision changed, or is the pain getting worse?', revealAt: 3900 },
+    { speaker: 'user', text: 'No vision changes. It just hasn\'t gone away.', revealAt: 5600 },
+    { speaker: 'assistant', text: 'Got it. I\'ll help you understand the next step.', revealAt: 7200 },
+  ],
+  context: [
+    { label: 'Concern', value: 'Left eye pain', revealAt: 2600 },
+    { label: 'Duration', value: 'Since yesterday', revealAt: 3200 },
+    { label: 'Trend', value: 'Ongoing', revealAt: 6400 },
+  ],
+}
 
 export default function HeroSection() {
   return (
@@ -45,45 +65,13 @@ export default function HeroSection() {
 
           {/* Right: Floating product composition — conversation UI + context chips */}
           <div className="hero-conversation flex-1 hidden lg:flex flex-col items-end gap-5 w-full max-w-lg">
-            {/* Context chips — extremely restrained */}
-            <div className="hero-context-chips flex gap-3 mb-2">
-              <div className="bg-ink-900/60 backdrop-blur-sm border border-soft-stone-100/10 rounded-full px-4 py-1.5 text-caption text-soft-stone-300">
-                <span className="text-aubergine-300 font-medium">ONGOING</span> · Since yesterday
-              </div>
-              <div className="bg-ink-900/60 backdrop-blur-sm border border-soft-stone-100/10 rounded-full px-4 py-1.5 text-caption text-soft-stone-300">
-                <span className="text-aubergine-300 font-medium">LOCATION</span> · Lekki, Lagos
-              </div>
-            </div>
-
-            {/* Main product object — conversation interface */}
-            <div className="hero-product-preview bg-ink-900/70 backdrop-blur-md border border-soft-stone-100/10 rounded-2xl w-full max-w-md shadow-2xl">
-              <div className="p-5 space-y-3">
-                {/* Assistant message */}
-                <div className="hero-message hero-message-1 flex justify-start">
-                  <div className="bg-bone-100/10 backdrop-blur-sm text-bone-100 rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]">
-                    <p className="text-body-sm leading-relaxed">Hello. I'm Hanya, your healthcare navigator. What brings you here today?</p>
-                  </div>
-                </div>
-                {/* User message */}
-                <div className="hero-message hero-message-2 flex justify-end">
-                  <div className="bg-aubergine-600 text-white rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%]">
-                    <p className="text-body-sm leading-relaxed">I've had a sharp pain in my left eye since yesterday.</p>
-                  </div>
-                </div>
-                {/* Assistant follow-up */}
-                <div className="hero-message hero-message-3 flex justify-start">
-                  <div className="bg-bone-100/10 backdrop-blur-sm text-bone-100 rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]">
-                    <p className="text-body-sm leading-relaxed">I'm sorry you're dealing with that. Let me understand a little more.</p>
-                  </div>
-                </div>
-                {/* Typing indicator */}
-                <div className="hero-typing flex items-center gap-2 pt-1">
-                  <div className="hero-typing-dot w-1.5 h-1.5 rounded-full bg-aubergine-400" />
-                  <div className="hero-typing-dot w-1.5 h-1.5 rounded-full bg-aubergine-400" />
-                  <div className="hero-typing-dot w-1.5 h-1.5 rounded-full bg-aubergine-400" />
-                </div>
-              </div>
-            </div>
+            <MockConversation
+              script={HERO_SCRIPT}
+              variant="dark"
+              className="w-full flex flex-col items-end gap-5"
+              contextClassName="min-h-[32px] flex flex-wrap justify-end gap-3 mb-2"
+              messageClassName="hero-product-preview bg-ink-900/70 backdrop-blur-md border border-soft-stone-100/10 rounded-2xl w-full max-w-md min-h-[326px] shadow-2xl p-5 space-y-3"
+            />
           </div>
         </div>
       </div>

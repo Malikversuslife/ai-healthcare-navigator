@@ -58,58 +58,203 @@
     filter: saturate(1.05) contrast(1.02) brightness(0.98);
   }
 
-  .hero-product-preview,
-  .hero-message,
-  .hero-typing,
-  .hero-context-chips {
-    opacity: 0;
-    transform: translateY(8px);
-    animation: heroConversationIn 560ms ease-out forwards;
-  }
-
   .hero-product-preview {
-    transform: translateY(10px) scale(0.985);
-    animation-delay: 180ms;
-  }
-
-  .hero-message-1 {
-    animation-delay: 520ms;
-  }
-
-  .hero-message-2 {
-    animation-delay: 920ms;
-  }
-
-  .hero-message-3 {
-    animation-delay: 1320ms;
-  }
-
-  .hero-typing {
-    animation-delay: 1680ms;
-  }
-
-  .hero-context-chips {
-    animation-delay: 1820ms;
-  }
-
-  .hero-typing-dot {
-    animation: heroTypingPulse 1200ms ease-in-out infinite;
-    animation-delay: 1800ms;
-  }
-
-  .hero-typing-dot:nth-child(2) {
-    animation-delay: 1960ms;
-  }
-
-  .hero-typing-dot:nth-child(3) {
-    animation-delay: 2120ms;
+    animation: heroPreviewIn 640ms ease-out both;
   }
 }
 
-@keyframes heroConversationIn {
+@keyframes heroPreviewIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+.mock-turn,
+.mock-context-item {
+  animation: mockConversationItemIn 420ms ease-out both;
+}
+
+.mock-conversation-fading {
+  animation: mockConversationFadeOut 720ms ease-in both;
+}
+
+.mock-typing-dot {
+  animation: heroTypingPulse 1200ms ease-in-out infinite;
+}
+
+.mock-typing-dot:nth-child(2) {
+  animation-delay: 160ms;
+}
+
+.mock-typing-dot:nth-child(3) {
+  animation-delay: 320ms;
+}
+
+.marketing-reveal {
+  opacity: 0;
+  translate: 0 14px;
+  transition: opacity 700ms ease, translate 700ms ease, background-color 200ms ease, color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.marketing-reveal.is-visible {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.reveal-delay-1 {
+  transition-delay: 120ms;
+}
+
+.reveal-delay-2 {
+  transition-delay: 220ms;
+}
+
+.reveal-delay-3 {
+  transition-delay: 320ms;
+}
+
+.reveal-delay-4 {
+  transition-delay: 420ms;
+}
+
+.reveal-delay-5 {
+  transition-delay: 520ms;
+}
+
+.marketing-tactile,
+.marketing-provider-card,
+.marketing-question,
+.trust-principle {
+  transition: transform 220ms ease, background-color 220ms ease, border-color 220ms ease, box-shadow 220ms ease, color 220ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .marketing-tactile:hover {
+    transform: translateY(-1px);
+  }
+
+  .marketing-provider-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(90, 45, 95, 0.16);
+    box-shadow: 0 18px 45px rgba(23, 26, 24, 0.08);
+  }
+
+  .marketing-question:hover,
+  .trust-principle:hover h3 {
+    color: #5A2D5F;
+  }
+
+  .trust-principle:hover h3 {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 5px;
+  }
+}
+
+.marketing-match-reasons span {
+  animation: mockConversationItemIn 420ms ease-out both;
+}
+
+.marketing-provider-card:nth-child(1) .marketing-match-reasons span {
+  animation-delay: 500ms;
+}
+
+.marketing-provider-card:nth-child(2) .marketing-match-reasons span {
+  animation-delay: 620ms;
+}
+
+.marketing-provider-card:nth-child(3) .marketing-match-reasons span {
+  animation-delay: 740ms;
+}
+
+.brand-path-line {
+  stroke-dasharray: 320;
+  stroke-dashoffset: 320;
+}
+
+.brand-pathway.is-visible .brand-path-line {
+  animation: brandPathDraw 900ms ease-out forwards;
+}
+
+.brand-pathway.is-visible .line-2 {
+  animation-delay: 450ms;
+}
+
+.brand-pathway.is-visible .line-3 {
+  animation-delay: 900ms;
+}
+
+.brand-path-node {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0.92);
+}
+
+.brand-pathway.is-visible .brand-path-node {
+  animation: brandNodeIn 420ms ease-out forwards;
+}
+
+.brand-pathway.is-visible .node-1 {
+  animation-delay: 120ms;
+}
+
+.brand-pathway.is-visible .node-2 {
+  animation-delay: 560ms;
+}
+
+.brand-pathway.is-visible .node-3 {
+  animation-delay: 1010ms;
+}
+
+.brand-pathway.is-visible .node-4 {
+  animation-delay: 1420ms;
+}
+
+.photo-reveal-image {
+  transform: scale(1.02);
+  transition: transform 1400ms ease;
+}
+
+.photo-reveal.is-visible .photo-reveal-image {
+  transform: scale(1);
+}
+
+@keyframes mockConversationItemIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes mockConversationFadeOut {
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes brandPathDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes brandNodeIn {
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -160,15 +305,22 @@
   }
 
   .hero-product-preview,
-  .hero-message,
-  .hero-typing,
-  .hero-context-chips {
+  .mock-turn,
+  .mock-context-item,
+  .mock-conversation-fading,
+  .marketing-reveal,
+  .brand-path-line,
+  .brand-path-node,
+  .photo-reveal-image {
     opacity: 1;
     transform: none;
+    translate: 0 0;
+    stroke-dashoffset: 0;
     animation: none !important;
+    transition-duration: 0.01ms !important;
   }
 
-  .hero-typing-dot {
+  .mock-typing-dot {
     opacity: 0.7;
     transform: none;
     animation: none !important;

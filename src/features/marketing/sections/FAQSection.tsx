@@ -21,7 +21,7 @@ function FAQItem({ question, answer, isOpen, onToggle }: FAQItemProps) {
     <div className="border-b border-soft-stone-200">
       <button
         onClick={onToggle}
-        className="w-full min-h-11 flex items-center justify-between py-6 text-left group"
+        className="w-full min-h-11 flex items-center justify-between py-6 text-left group hover:text-aubergine-600 transition-colors"
         aria-expanded={isOpen}
       >
         <span className="text-lg sm:text-xl font-display text-ink-900 pr-8">
@@ -38,7 +38,7 @@ function FAQItem({ question, answer, isOpen, onToggle }: FAQItemProps) {
         style={{ height: height ? `${height}px` : '0px' }}
         className="overflow-hidden transition-all duration-300 ease-in-out"
       >
-        <p className="pb-6 text-body text-ink-600 leading-relaxed max-w-3xl">
+        <p className={`pb-6 text-body text-ink-600 leading-relaxed max-w-3xl transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
           {answer}
         </p>
       </div>

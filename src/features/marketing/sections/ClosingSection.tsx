@@ -1,8 +1,13 @@
 import { Link } from 'react-router-dom'
+import { useRef } from 'react'
+import { useInView } from '../hooks/useInView'
 
 export default function ClosingSection() {
+  const sectionRef = useRef<HTMLElement>(null)
+  const isInView = useInView(sectionRef)
+
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+    <section ref={sectionRef} className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
       {/* Full-bleed photography — West African route/path, intentional crop */}
       <div className="absolute inset-0">
         <img
@@ -15,7 +20,7 @@ export default function ClosingSection() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 text-center px-5">
+      <div className={`marketing-reveal ${isInView ? 'is-visible' : ''} relative z-10 text-center px-5`}>
         <h2 className="font-display text-display-xl text-bone-100 mb-6 text-balance">
           You don't have<br />
           <span className="italic text-aubergine-300">to figure it out alone.</span>
@@ -25,7 +30,7 @@ export default function ClosingSection() {
         </p>
         <Link
           to="/navigator"
-          className="inline-flex min-h-11 items-center justify-center bg-aubergine-600 text-white px-10 py-4 rounded-full text-body font-medium hover:bg-aubergine-700 transition-colors"
+          className="marketing-tactile inline-flex min-h-11 items-center justify-center bg-aubergine-600 text-white px-10 py-4 rounded-full text-body font-medium hover:bg-aubergine-700 transition-colors"
         >
           Start with Hanya
         </Link>
