@@ -144,6 +144,12 @@ Build for production:
 npm run build
 ```
 
+## Deployment
+
+Temporary public hosting uses Vercel as a Vite/React SPA. The production build outputs to `dist`, and `vercel.json` rewrites `/navigator` to `index.html` so direct navigation and refreshes work with React Router.
+
+The current public MVP is configured to run in fallback/mock AI mode and does not require paid OpenAI API access. OpenAI-backed production mode can be enabled later through server-side configuration without changing the healthcare navigation architecture.
+
 ## OpenAI Configuration
 
 The implementation uses only these environment variables:
