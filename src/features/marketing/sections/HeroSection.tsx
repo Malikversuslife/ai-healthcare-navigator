@@ -23,22 +23,22 @@ const HERO_SCRIPT: MockConversationScript = {
 export default function HeroSection() {
   return (
     <section className="relative min-h-[105vh] lg:min-h-[110vh] flex flex-col overflow-hidden">
-      {/* Full-bleed photography — intentional crop for mobile */}
+      {/* Full-bleed photography - intentional crop for mobile */}
       <div className="absolute inset-0">
         <img
           src="/images/hero.jpg"
           alt=""
           className="w-full h-full object-cover object-[center_30%] sm:object-center photo-warm"
         />
-        {/* Subtle overlay for text contrast — photograph remains visible */}
+        {/* Subtle overlay for text contrast - photograph remains visible */}
         <div className="absolute inset-0 bg-gradient-to-r from-ink-900/75 via-ink-900/30 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-ink-900/50 via-transparent to-ink-900/10" />
       </div>
 
-      {/* Content — integrated composition */}
+      {/* Content - integrated composition */}
       <div className="relative z-10 flex-1 flex flex-col section-container pt-32 sm:pt-36 lg:pt-40 pb-20 lg:pb-24">
         <div className="flex-1 flex flex-col lg:flex-row items-start lg:items-center gap-10 lg:gap-20">
-          {/* Left: Headline + CTA — slightly reduced headline scale */}
+          {/* Left: Headline + CTA - slightly reduced headline scale */}
           <div className="flex-1 max-w-2xl">
             <h1 className="font-display text-hero text-bone-100 mb-8 text-balance leading-[0.95]">
               Know where<br />
@@ -63,7 +63,7 @@ export default function HeroSection() {
             </div>
           </div>
 
-          {/* Right: Floating product composition — conversation UI + context chips */}
+          {/* Right: Floating product composition - conversation UI + context chips */}
           <div className="hero-conversation flex-1 hidden lg:flex flex-col items-end gap-5 w-full max-w-lg">
             <MockConversation
               script={HERO_SCRIPT}

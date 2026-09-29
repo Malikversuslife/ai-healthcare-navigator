@@ -113,7 +113,7 @@ const AREA_TO_CITY: Record<string, string> = {
 }
 
 // ---------------------------------------------------------------------------
-// Ranking weights — documented, transparent, deterministic
+// Ranking weights - documented, transparent, deterministic
 // ---------------------------------------------------------------------------
 
 const WEIGHTS = {
@@ -132,7 +132,7 @@ const MAX_DISTANCE_KM = 100
 const MAX_CONSULTATION_FEE = 50000
 
 // ---------------------------------------------------------------------------
-// Candidate retrieval — basic filtering before scoring
+// Candidate retrieval - basic filtering before scoring
 // ---------------------------------------------------------------------------
 
 function resolveCityFromArea(input: string): string | undefined {
@@ -288,13 +288,13 @@ function scoreDistance(
 }
 
 function scoreRating(rating: number): number {
-  // Rating is a minor factor — scaled to WEIGHTS.rating range
+  // Rating is a minor factor - scaled to WEIGHTS.rating range
   const normalized = (rating - 3) / 2 // 3.0 → 0, 5.0 → 1
   return Math.round(Math.max(0, Math.min(1, normalized)) * WEIGHTS.rating)
 }
 
 function scoreCost(fee: number): number {
-  // Lower cost = slightly higher score — minor factor
+  // Lower cost = slightly higher score - minor factor
   const normalized = 1 - Math.min(fee, MAX_CONSULTATION_FEE) / MAX_CONSULTATION_FEE
   return Math.round(normalized * WEIGHTS.cost)
 }

@@ -8,14 +8,14 @@ export default function ClosingSection() {
 
   return (
     <section ref={sectionRef} className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-      {/* Full-bleed photography — West African route/path, intentional crop */}
+      {/* Full-bleed photography - West African route/path, intentional crop */}
       <div className="absolute inset-0">
         <img
           src="/images/closing.jpg"
           alt=""
           className="w-full h-full object-cover object-[center_40%] sm:object-center photo-warm"
         />
-        {/* Overlay for text contrast — warm evening feel */}
+        {/* Overlay for text contrast - warm evening feel */}
         <div className="absolute inset-0 bg-gradient-to-t from-ink-900/80 via-ink-900/30 to-ink-900/20" />
       </div>
 

@@ -77,7 +77,7 @@ function ConversationView() {
   }
 
   const handleSelectProvider = (providerId: string) => {
-    // Provider selected — for now just log. Booking not yet implemented.
+    // Provider selected - for now just log. Booking not yet implemented.
     void providerId
   }
 

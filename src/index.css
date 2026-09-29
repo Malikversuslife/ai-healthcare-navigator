@@ -17,6 +17,10 @@
     color: #171A18;
   }
 
+  .navigator-shell {
+    background: #f8f5ef;
+  }
+
   ::selection {
     background-color: rgba(90, 45, 95, 0.15);
   }
@@ -28,6 +32,69 @@
     outline: 2px solid #5A2D5F;
     outline-offset: 3px;
   }
+}
+
+.navigator-header {
+  backdrop-filter: blur(8px);
+}
+
+.navigator-welcome .navigator-header {
+  background: #dcecf1;
+  border-color: rgba(79, 117, 95, .14);
+}
+
+.navigator-welcome footer {
+  background: #91b886;
+  border-color: rgba(79, 117, 95, .28);
+}
+
+.navigator-welcome main {
+  padding-bottom: 0;
+}
+
+.navigator-welcome footer p {
+  color: #315443;
+}
+
+.welcome-world {
+  background: #dcecf1;
+  isolation: isolate;
+  min-height: calc(100vh - 210px);
+}
+
+.welcome-world::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .14;
+  background: #c9e0e4;
+}
+
+.welcome-content { padding-bottom: min(28vh, 260px); }
+.welcome-kicker { color: #5A2D5F; font-size: .7rem; font-weight: 700; letter-spacing: .13em; margin: 0 0 .75rem; text-transform: uppercase; }
+
+.welcome-landscape { position: absolute; z-index: 0; bottom: -1px; left: 0; width: 100%; color: #4f755f; pointer-events: none; }
+.welcome-landscape svg { display: block; width: 100%; min-width: 760px; height: auto; transform: translateX(50%); margin-left: -380px; }
+.landscape-hill { stroke: none; }
+.hill-back { fill: #bbd5b4; }
+.hill-front { fill: #91b886; }
+.hanya-path { fill: none; stroke: #6c3c80; stroke-width: 10; stroke-linecap: round; opacity: .92; }
+.landscape-home, .landscape-pharmacy, .landscape-clinic, .landscape-hospital { fill: #f6e6c7; stroke: #4f755f; stroke-width: 3; stroke-linejoin: round; }
+.landscape-home path:nth-child(3), .landscape-pharmacy path:nth-child(3), .landscape-clinic path:nth-child(3), .landscape-hospital path:nth-child(3) { fill: none; }
+.landscape-pharmacy .cross, .landscape-clinic .cross, .landscape-hospital .cross { fill: #dc765d; stroke: none; }
+.landscape-trees { fill: #648f63; stroke: #4f755f; stroke-width: 4; stroke-linecap: round; }
+.landscape-people { fill: none; stroke: #d06f5c; stroke-width: 3; stroke-linecap: round; }
+.landscape-people circle { fill: #d06f5c; stroke: none; }
+.landscape-clouds { fill: #f8f5ef; opacity: .75; }
+
+.navigator-understanding main, .navigator-guidance main, .navigator-find_care main, .navigator-complete main { background: #f8f5ef; }
+.emergency-direct { background: #fffdfb; }
+
+@media (max-width: 640px) {
+  .welcome-world { min-height: calc(100vh - 185px); padding-top: 2.25rem; }
+  .welcome-content { padding-bottom: min(31vh, 230px); }
+  .welcome-landscape svg { min-width: 660px; margin-left: -330px; }
 }
 
 @layer components {

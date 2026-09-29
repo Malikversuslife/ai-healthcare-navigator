@@ -1,4 +1,4 @@
-# Stage 5 — Provider Matching & Ranking Engine
+# Stage 5 - Provider Matching & Ranking Engine
 
 ## Purpose
 
@@ -74,15 +74,15 @@ It is NOT:
 
 | Factor | Weight | Description |
 |--------|--------|-------------|
-| Specialty match | 30 | Strong — user explicitly requested this type |
-| Provider type match | 15 | Strong — clinic/hospital/telehealth match |
-| City match | 15 | Medium — provider is in the searched city |
-| Insurance match | 12 | Medium — provider accepts user's insurance |
-| Area match | 10 | Medium — provider is in the searched area |
-| Availability | 8 | Medium — provider is currently available |
-| Distance | 5 | Minor — closer providers get slight advantage |
-| Rating | 3 | Minor — rating is demo data, not dominant |
-| Cost | 2 | Minor — lower cost gets slight advantage |
+| Specialty match | 30 | Strong - user explicitly requested this type |
+| Provider type match | 15 | Strong - clinic/hospital/telehealth match |
+| City match | 15 | Medium - provider is in the searched city |
+| Insurance match | 12 | Medium - provider accepts user's insurance |
+| Area match | 10 | Medium - provider is in the searched area |
+| Availability | 8 | Medium - provider is currently available |
+| Distance | 5 | Minor - closer providers get slight advantage |
+| Rating | 3 | Minor - rating is demo data, not dominant |
+| Cost | 2 | Minor - lower cost gets slight advantage |
 
 ---
 
@@ -151,7 +151,7 @@ The supported vocabulary is deliberately small and explicit.
 |---------|------------------------|
 | `primary_care` | Default search for General Practice, Family Medicine, clinics |
 | `provider_or_specialist` | Use explicitly stated specialty/provider intent |
-| `prompt_medical_review` | Search for general medical assessment — do NOT translate to specific specialty |
+| `prompt_medical_review` | Search for general medical assessment - do NOT translate to specific specialty |
 | `informational_navigation` | Do NOT automatically trigger provider search |
 
 ---
@@ -174,9 +174,9 @@ Uses Haversine formula for geographical distance calculation. Returns distance i
 ## Insurance Compatibility
 
 Insurance status uses three states:
-- `accepted` — provider lists the insurance plan
-- `not_accepted` — provider does not list it
-- `unknown` — no insurance specified
+- `accepted` - provider lists the insurance plan
+- `not_accepted` - provider does not list it
+- `unknown` - no insurance specified
 
 **Do NOT claim "Your visit is covered."** Provider acceptance and actual insurance coverage are different.
 
@@ -227,9 +227,9 @@ All ranking is application-controlled.
 
 ## Known Limitations
 
-1. Specialty normalization vocabulary is deliberately small — uncommon specialties may not normalize
+1. Specialty normalization vocabulary is deliberately small - uncommon specialties may not normalize
 2. Distance calculation is approximate (Haversine)
 3. Ratings are demo data and should not be treated as real public reviews
 4. Insurance matching checks list membership, not actual coverage
-5. Availability is mock data — does not reflect real appointment slots
-6. The system cannot assess clinical suitability — only match against stated criteria
+5. Availability is mock data - does not reflect real appointment slots
+6. The system cannot assess clinical suitability - only match against stated criteria

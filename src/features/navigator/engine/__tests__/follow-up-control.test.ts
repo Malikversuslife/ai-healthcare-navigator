@@ -143,7 +143,7 @@ describe('application-controlled follow-up fields', () => {
   })
 
   describe('general_healthcare', () => {
-    it('always returns empty — no fields required', () => {
+    it('always returns empty - no fields required', () => {
       const context: UserHealthContext = {
         concern: '',
         symptoms: [],

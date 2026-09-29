@@ -12,7 +12,7 @@ const PRINCIPLES = [
   },
   {
     title: 'Recommends pathways',
-    description: 'Suggests the most appropriate care pathway — not diagnoses, not prescriptions.',
+    description: 'Suggests the most appropriate care pathway - not diagnoses, not prescriptions.',
   },
   {
     title: 'Helps you find providers',

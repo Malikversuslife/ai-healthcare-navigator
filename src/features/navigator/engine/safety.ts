@@ -7,7 +7,7 @@ import {
 } from '../../../shared/types'
 
 // ---------------------------------------------------------------------------
-// Stage 4B — Emergency Safety Engine v1
+// Stage 4B - Emergency Safety Engine v1
 //
 // This is NOT a diagnostic engine.
 // This is NOT a comprehensive clinical triage system.
@@ -97,7 +97,7 @@ const RESOLVED_OR_REMOTE_PATTERNS = [
 function isResolvedOrRemoteContext(text: string): boolean {
   const lower = text.toLowerCase()
 
-  // If ANY current indicator is present, the symptom is ongoing — do not suppress
+  // If ANY current indicator is present, the symptom is ongoing - do not suppress
   if (CURRENT_INDICATORS.some(indicator => lower.includes(indicator))) {
     return false
   }

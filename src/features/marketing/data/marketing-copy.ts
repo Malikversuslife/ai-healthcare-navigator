@@ -66,7 +66,7 @@ export const TRUST = {
   principles: [
     { title: 'Organizes what you report', description: 'Hanya structures the information you share into a clear picture of your situation.' },
     { title: 'Emergency-aware', description: 'Recognizes predefined safety patterns and escalates immediately when appropriate.' },
-    { title: 'Recommends pathways', description: 'Suggests the most appropriate care pathway — not diagnoses, not prescriptions.' },
+    { title: 'Recommends pathways', description: 'Suggests the most appropriate care pathway - not diagnoses, not prescriptions.' },
     { title: 'Helps you find providers', description: 'Connects you with healthcare options that match your needs and location.' },
     { title: 'Privacy-aware prototype', description: 'The Navigator does not require an account; OpenAI mode processes relevant context through Hanya\'s server.' },
     { title: 'Transparent', description: 'Hanya explains why it suggests a particular next step. No black boxes.' },
@@ -87,7 +87,7 @@ export const FAQ = {
     },
     {
       question: 'How does Hanya decide what I should do next?',
-      answer: 'Hanya uses the information you provide — your symptoms, duration, and situation — to evaluate which care pathway is most appropriate. It explains its reasoning.',
+      answer: 'Hanya uses the information you provide - your symptoms, duration, and situation - to evaluate which care pathway is most appropriate. It explains its reasoning.',
     },
     {
       question: 'Can Hanya help me find healthcare providers?',
@@ -95,7 +95,7 @@ export const FAQ = {
     },
     {
       question: 'Does Hanya verify insurance coverage?',
-      answer: 'Hanya shows whether a provider lists your selected insurance plan. It does not guarantee coverage — always confirm directly with the provider.',
+      answer: 'Hanya shows whether a provider lists your selected insurance plan. It does not guarantee coverage - always confirm directly with the provider.',
     },
     {
       question: 'What happens if something sounds like an emergency?',

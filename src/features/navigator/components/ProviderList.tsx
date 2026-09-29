@@ -64,7 +64,7 @@ function ProviderList({ matches, onSelectProvider = () => {} }: ProviderListProp
         <>
           <div className="bg-amber-50 rounded-xl border border-amber-200 p-3">
             <p className="text-sm text-amber-800 font-medium">
-              Partial matches — these may still be useful
+              Partial matches - these may still be useful
             </p>
             <p className="text-xs text-amber-600 mt-1">
               These providers don't fully match your specialty request but may be relevant.

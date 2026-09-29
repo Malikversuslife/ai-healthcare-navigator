@@ -105,7 +105,7 @@ describe('rankProviders', () => {
       const results = rankProviders(MOCK_PROVIDERS, context)
       const multiSpecialty = results.find(m => m.provider.id === 'p4')
       // Multi-Specialty Hospital specialty is "Multi-Specialty Hospital"
-      // — it does NOT contain "dermatology", so it should NOT get specialty_match
+      // - it does NOT contain "dermatology", so it should NOT get specialty_match
       expect(multiSpecialty?.matchReasons).not.toContain('specialty_match')
     })
   })
@@ -367,7 +367,7 @@ describe('rankProviders', () => {
     })
   })
 
-  describe('match reasons — lower_cost and high_rating', () => {
+  describe('match reasons - lower_cost and high_rating', () => {
     it('low-cost provider gets lower_cost reason', () => {
       const cheap: Provider = {
         id: 'cheap',
@@ -481,7 +481,7 @@ describe('rankProviders', () => {
     })
   })
 
-  describe('multi-specialty hospital — specialty matching', () => {
+  describe('multi-specialty hospital - specialty matching', () => {
     it('Multi-Specialty Hospital does NOT get specialty_match for unrelated specialty', () => {
       const multi: Provider = {
         id: 'multi',

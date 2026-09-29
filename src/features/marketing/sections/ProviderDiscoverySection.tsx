@@ -19,7 +19,7 @@ export default function ProviderDiscoverySection() {
           </p>
         </div>
 
-        {/* Oversized provider discovery interface — extends beyond standard container */}
+        {/* Oversized provider discovery interface - extends beyond standard container */}
         <div className={`marketing-reveal reveal-delay-1 ${isInView ? 'is-visible' : ''} bg-white rounded-2xl sm:rounded-3xl border border-soft-stone-100 shadow-sm overflow-hidden`}>
           {/* Search/context bar */}
           <div className="border-b border-soft-stone-100 px-8 py-5 flex flex-wrap items-center gap-3">
@@ -45,7 +45,7 @@ export default function ProviderDiscoverySection() {
             </div>
           </div>
 
-          {/* Provider results — oversized, detailed */}
+          {/* Provider results - oversized, detailed */}
           <div className="px-8 pb-8 space-y-4">
             {/* Provider 1 */}
             <div className={`marketing-provider-card marketing-reveal reveal-delay-2 ${isInView ? 'is-visible' : ''} bg-bone-50 rounded-2xl p-6 border border-soft-stone-100`}>

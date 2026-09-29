@@ -4,14 +4,14 @@ import { evaluateEmergencySafety } from '../safety'
 import { UserHealthContext } from '../../../../shared/types'
 
 // ---------------------------------------------------------------------------
-// Fallback safety tests — verify MockAIService extraction feeds the existing
+// Fallback safety tests - verify MockAIService extraction feeds the existing
 // safety engine correctly without OpenAI.
 //
 // MockAIService should extract user-stated information.
 // safety.ts remains the only place that decides emergency.
 // ---------------------------------------------------------------------------
 
-describe('Fallback safety — MockAIService extraction for safety engine', () => {
+describe('Fallback safety - MockAIService extraction for safety engine', () => {
   const service = new MockAIService()
   const emptyContext: UserHealthContext = {
     concern: '',
@@ -198,7 +198,7 @@ describe('Fallback safety — MockAIService extraction for safety engine', () =>
         duration: '',
       }
       const result = await service.processMessage('For 2 days.', ctxWithSymptoms)
-      // New symptoms should not overwrite existing — extraction should merge
+      // New symptoms should not overwrite existing - extraction should merge
       const merged: UserHealthContext = { ...ctxWithSymptoms, ...result.extractedContext }
       expect(merged.symptoms).toContain('red eye')
       expect(merged.symptoms).toContain('teary')

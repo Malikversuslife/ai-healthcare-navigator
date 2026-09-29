@@ -95,7 +95,7 @@ function FindCareView({
             {contextLine}
           </p>
 
-          {/* Insurance filters — visually subordinate */}
+          {/* Insurance filters - visually subordinate */}
           <div className="mb-6">
             <button
               type="button"

@@ -31,7 +31,7 @@ export default function RecommendationDemo({ className = '' }: { className?: str
 
         {/* Disclaimer */}
         <p className="text-caption text-ink-400 mt-6 leading-relaxed">
-          Hanya navigates — it does not diagnose. This is guidance, not medical advice.
+          Hanya navigates - it does not diagnose. This is guidance, not medical advice.
         </p>
       </div>
     </ProductMockup>

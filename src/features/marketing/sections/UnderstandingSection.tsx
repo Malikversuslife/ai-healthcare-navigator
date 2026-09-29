@@ -35,7 +35,7 @@ export default function UnderstandingSection() {
           </p>
         </div>
 
-        {/* Large left/right composition — 60-75% width */}
+        {/* Large left/right composition - 60-75% width */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6 items-start">
           {/* Left: Large conversation interface */}
           <div className="lg:col-span-5">
@@ -61,7 +61,7 @@ export default function UnderstandingSection() {
             </div>
           </div>
 
-          {/* Center: Subtle waypoint connection — desktop only */}
+          {/* Center: Subtle waypoint connection - desktop only */}
           <div className="hidden lg:flex lg:col-span-2 items-center justify-center">
             <svg width="2" height="200" viewBox="0 0 2 200" fill="none" className="opacity-30">
               <line x1="1" y1="0" x2="1" y2="200" stroke="#5A2D5F" strokeWidth="1" strokeDasharray="4 4" />

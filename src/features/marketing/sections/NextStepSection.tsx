@@ -39,7 +39,7 @@ export default function NextStepSection() {
 
                 {/* Disclaimer */}
                 <p className="text-caption text-ink-400 mt-8 leading-relaxed">
-                  Hanya navigates — it does not diagnose. This is guidance, not medical advice.
+                  Hanya navigates - it does not diagnose. This is guidance, not medical advice.
                 </p>
               </div>
             </div>

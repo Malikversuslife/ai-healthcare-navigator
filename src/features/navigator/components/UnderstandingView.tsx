@@ -24,7 +24,7 @@ function UnderstandingView({ messages, userContext, progress, visualState, isLoa
 
   const hasContext = userContext.concern || userContext.symptoms.length > 0
 
-  // Hide the first assistant greeting — active transcript starts from user's first message
+  // Hide the first assistant greeting - active transcript starts from user's first message
   const visibleMessages = messages.length > 1 ? messages.slice(1) : messages
 
   return (
@@ -57,7 +57,7 @@ function UnderstandingView({ messages, userContext, progress, visualState, isLoa
         </div>
       </div>
 
-      {/* Context rail — desktop only */}
+      {/* Context rail - desktop only */}
       {hasContext && (
         <aside className="hidden lg:block w-64 shrink-0 pt-4">
           <ContextPanel userContext={userContext} />

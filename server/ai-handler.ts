@@ -93,12 +93,12 @@ const EXTRACTION_SCHEMA = {
               description: 'User\'s own description of impact',
             },
           },
-          description: 'Functional impact — ONLY when user explicitly describes inability to work or do daily activities. Do NOT infer from severity or duration.',
+          description: 'Functional impact - ONLY when user explicitly describes inability to work or do daily activities. Do NOT infer from severity or duration.',
         },
         symptomTrend: {
           type: ['string', 'null'],
           enum: ['improving', 'stable', 'worsening', 'rapidly_worsening', 'unknown'],
-          description: 'Symptom trend — ONLY when user explicitly describes how symptoms are changing. Do NOT infer from severity or duration.',
+          description: 'Symptom trend - ONLY when user explicitly describes how symptoms are changing. Do NOT infer from severity or duration.',
         },
         specialty: {
           type: ['string', 'null'],

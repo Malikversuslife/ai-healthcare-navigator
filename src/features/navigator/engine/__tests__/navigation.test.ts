@@ -387,7 +387,7 @@ describe('evaluateCarePathway', () => {
         },
       }
       const action = evaluateNavigation(context)
-      // Safety check runs first — emergency takes precedence
+      // Safety check runs first - emergency takes precedence
       expect(action.type).toBe('emergency')
     })
   })

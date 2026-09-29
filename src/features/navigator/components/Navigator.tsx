@@ -162,9 +162,9 @@ function Navigator() {
   }
 
   return (
-    <div className="min-h-screen bg-bone-50 flex flex-col">
+    <div className={`min-h-screen bg-bone-50 flex flex-col navigator-shell navigator-${visualState}`}>
       {/* Header */}
-      <header className="border-b border-ink-100 bg-bone-50">
+      <header className="border-b border-ink-100 bg-bone-50/95 navigator-header">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between" style={{ minHeight: '56px' }}>
           <Link
             to={NAVIGATOR_BRAND_HOME_PATH}
@@ -207,7 +207,7 @@ function Navigator() {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 px-4 py-6 md:py-10">
+      <main className={`flex-1 px-4 py-6 md:py-10 ${visualState === 'welcome' ? 'overflow-hidden' : ''}`}>
         {renderContent()}
       </main>
 

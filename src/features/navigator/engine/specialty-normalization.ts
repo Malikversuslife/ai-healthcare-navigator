@@ -2,7 +2,7 @@
  * Specialty Normalization
  *
  * Deterministic mapping from user-described provider terms to standard specialties.
- * This is NOT symptom-to-specialty inference — it normalizes explicit provider requests.
+ * This is NOT symptom-to-specialty inference - it normalizes explicit provider requests.
  *
  * "I need a dermatologist" → Dermatology
  * "I have a rash" → NOT automatically Dermatology
@@ -132,7 +132,7 @@ export function normalizeSpecialty(userInput: string): string {
     return SPECIALTY_ALIASES[userInput]
   }
 
-  // Return original — do not invent mappings
+  // Return original - do not invent mappings
   return userInput
 }
 
@@ -154,6 +154,6 @@ export function isSpecialtyMatch(
     }
   }
 
-  // Direct match — provider specialty must explicitly contain the requested specialty
+  // Direct match - provider specialty must explicitly contain the requested specialty
   return providerNorm.includes(normalized.toLowerCase())
 }

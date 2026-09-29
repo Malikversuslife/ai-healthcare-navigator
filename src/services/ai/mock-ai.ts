@@ -46,7 +46,7 @@ function extractSymptoms(message: string): string[] {
   const symptoms: string[] = []
   const lower = message.toLowerCase()
 
-  // Multi-word symptom phrases — checked first to preserve full safety-relevant language
+  // Multi-word symptom phrases - checked first to preserve full safety-relevant language
   const phrasePatterns: Array<{ pattern: RegExp; symptom: string }> = [
     { pattern: /chest\s+(?:pain|discomfort|tightness|pressure|crushing)/i, symptom: 'chest pain' },
     { pattern: /can'?t\s+breathe/i, symptom: "can't breathe" },
@@ -71,7 +71,7 @@ function extractSymptoms(message: string): string[] {
     }
   }
 
-  // Single-word symptom patterns — only add if not already captured by phrases above
+  // Single-word symptom patterns - only add if not already captured by phrases above
   const singlePatterns: Array<{ pattern: RegExp; symptom: string }> = [
     { pattern: /pain|ache|hurt/i, symptom: 'pain' },
     { pattern: /nausea|vomit|throwing up/i, symptom: 'nausea' },
@@ -385,7 +385,7 @@ export class MockAIService implements AIService {
     // Extract information from message
     const extracted = extractInformation(message)
 
-    // Build updated context — only update fields that were actually extracted
+    // Build updated context - only update fields that were actually extracted
     const updatedContext: Partial<UserHealthContext> = {}
 
     if (extracted.concern) {

@@ -95,7 +95,7 @@ describe('Conversation flow regression', () => {
     })
   })
 
-  describe('explicit specialty request — "eye doctor"', () => {
+  describe('explicit specialty request - "eye doctor"', () => {
     it('extracts ophthalmologist from "I need to see an eye doctor"', async () => {
       const result = await service.processMessage('I need to see an eye doctor', emptyContext)
       expect(result.extractedContext.specialty).toBe('ophthalmologist')

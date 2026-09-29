@@ -6,7 +6,7 @@ import {
 } from '../../../shared/types'
 
 // ---------------------------------------------------------------------------
-// Stage 4C — Non-Emergency Care Navigation Foundation
+// Stage 4C - Non-Emergency Care Navigation Foundation
 //
 // This determines the appropriate NAVIGATION PATHWAY, not diagnosis.
 //
@@ -172,7 +172,7 @@ export function evaluateCarePathway(
     }
   }
 
-  // 5. Fallback — any other intent with sufficient context
+  // 5. Fallback - any other intent with sufficient context
   rationale.push('Healthcare navigation request without escalation factors')
   return {
     pathway: 'primary_care',

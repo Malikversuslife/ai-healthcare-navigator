@@ -226,7 +226,7 @@ export function useConversation() {
       const result = await aiService.processMessage(content, state.userContext)
 
       // Application merges extracted context
-      // Filter null values — AI may return null for unextracted fields,
+      // Filter null values - AI may return null for unextracted fields,
       // which would corrupt context (null !== undefined passes field-detection checks)
       const clean: Partial<UserHealthContext> = {}
       if (result.extractedContext) {
@@ -241,15 +241,15 @@ export function useConversation() {
       }
 
       // Build updated context from current state + cleaned extraction
-      // (not from stale closure state — dispatch above updates state.userContext asynchronously)
+      // (not from stale closure state - dispatch above updates state.userContext asynchronously)
       const updatedContext = { ...state.userContext, ...clean }
 
-      // Stage 4B: Safety evaluation runs FIRST — before any navigation logic
+      // Stage 4B: Safety evaluation runs FIRST - before any navigation logic
       const safetyResult = evaluateEmergencySafety(updatedContext)
       dispatch({ type: 'SET_SAFETY_RESULT', result: safetyResult })
 
       if (safetyResult.triggered) {
-        // Emergency interrupts normal flow — no further navigation evaluation
+        // Emergency interrupts normal flow - no further navigation evaluation
         dispatch({ type: 'SET_NAVIGATION_STATE', state: 'emergency' })
         dispatch({ type: 'SET_STEP', step: 'emergency' })
 
@@ -274,7 +274,7 @@ export function useConversation() {
       // Handle each action type
       switch (navAction.type) {
         case 'emergency': {
-          // Defensive — should not happen if safety evaluation above is correct
+          // Defensive - should not happen if safety evaluation above is correct
           dispatch({ type: 'SET_NAVIGATION_STATE', state: 'emergency' })
           dispatch({ type: 'SET_STEP', step: 'emergency' })
 

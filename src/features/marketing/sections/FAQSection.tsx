@@ -52,9 +52,9 @@ export default function FAQSection() {
   const items = [
     { question: 'What is Hanya?', answer: 'Hanya is a healthcare navigation tool that helps you understand what kind of care may be appropriate and guides you toward the right next step.' },
     { question: 'Does Hanya diagnose medical conditions?', answer: 'No. Hanya never diagnoses, prescribes, or claims medical certainty. It helps organize what you share and recommends appropriate care pathways.' },
-    { question: 'How does Hanya decide what I should do next?', answer: 'Hanya uses the information you provide — your symptoms, duration, and situation — to evaluate which care pathway is most appropriate. It explains its reasoning.' },
+    { question: 'How does Hanya decide what I should do next?', answer: 'Hanya uses the information you provide - your symptoms, duration, and situation - to evaluate which care pathway is most appropriate. It explains its reasoning.' },
     { question: 'Can Hanya help me find healthcare providers?', answer: 'Yes. When a provider visit is recommended, Hanya helps you find options that match your location, specialty need, and insurance.' },
-    { question: 'Does Hanya verify insurance coverage?', answer: 'Hanya shows whether a provider lists your selected insurance plan. It does not guarantee coverage — always confirm directly with the provider.' },
+    { question: 'Does Hanya verify insurance coverage?', answer: 'Hanya shows whether a provider lists your selected insurance plan. It does not guarantee coverage - always confirm directly with the provider.' },
     { question: 'What happens if something sounds like an emergency?', answer: 'Hanya has built-in safety awareness. If your symptoms suggest a potential emergency, it will immediately recommend calling emergency services or seeking urgent care.' },
     { question: 'Is my information private?', answer: 'The Navigator does not require an account in this MVP. OpenAI-backed mode sends relevant conversation context through Hanya\'s server endpoint for AI processing; fallback mode uses local structured extraction.' },
   ]

@@ -1,4 +1,4 @@
-# Stage 4C — Non-Emergency Care Navigation Foundation
+# Stage 4C - Non-Emergency Care Navigation Foundation
 
 ## Purpose
 
@@ -161,7 +161,7 @@ A negative safety result from Stage 4B must never be treated as medical clearanc
 
 1. Escalation factors are text-based and may miss nuanced descriptions
 2. The pathway engine does not have access to clinical knowledge
-3. `prompt_medical_review` is conservative by design — it may escalate cases that could be managed at primary care
+3. `prompt_medical_review` is conservative by design - it may escalate cases that could be managed at primary care
 4. The system cannot detect hidden urgency that isn't expressed in the user's words
 5. This is a navigation tool, not a medical assessment
 

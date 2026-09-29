@@ -23,7 +23,7 @@ describe('calculateDistance', () => {
   })
 
   it('calculates distance between nearby points in Lagos', () => {
-    // Ikeja to Lekki — roughly 20-30 km
+    // Ikeja to Lekki - roughly 20-30 km
     const distance = calculateDistance(
       { lat: 6.6000, lng: 3.3500 },
       { lat: 6.4470, lng: 3.4550 }
@@ -42,7 +42,7 @@ describe('calculateDistance', () => {
     expect(distance).toBeLessThan(100)
   })
 
-  it('is symmetric — distance A to B equals distance B to A', () => {
+  it('is symmetric - distance A to B equals distance B to A', () => {
     const pointA = { lat: 6.5244, lng: 3.3792 }
     const pointB = { lat: 9.0579, lng: 7.4951 }
 

@@ -169,7 +169,7 @@ describe('isContextSufficient', () => {
   })
 
   describe('general_healthcare', () => {
-    it('always returns true — no symptom context required', () => {
+    it('always returns true - no symptom context required', () => {
       const context: UserHealthContext = {
         concern: '',
         symptoms: [],
