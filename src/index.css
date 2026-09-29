@@ -75,7 +75,7 @@
 .welcome-kicker { color: #5A2D5F; font-size: .7rem; font-weight: 700; letter-spacing: .13em; margin: 0 0 .75rem; text-transform: uppercase; }
 
 .welcome-landscape { position: absolute; z-index: 0; bottom: -1px; left: 0; width: 100%; color: #4f755f; pointer-events: none; }
-.welcome-landscape svg { display: block; width: 100%; min-width: 760px; height: auto; transform: translateX(50%); margin-left: -380px; }
+.welcome-landscape svg { display: block; position: relative; left: 50%; width: 100%; min-width: 760px; height: auto; transform: translateX(-50%); }
 .landscape-hill { stroke: none; }
 .hill-back { fill: #bbd5b4; }
 .hill-front { fill: #91b886; }
@@ -94,7 +94,7 @@
 @media (max-width: 640px) {
   .welcome-world { min-height: calc(100vh - 185px); padding-top: 2.25rem; }
   .welcome-content { padding-bottom: min(31vh, 230px); }
-  .welcome-landscape svg { min-width: 660px; margin-left: -330px; }
+  .welcome-landscape svg { min-width: 660px; }
 }
 
 @layer components {
